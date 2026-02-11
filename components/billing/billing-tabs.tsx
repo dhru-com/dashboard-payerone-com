@@ -51,6 +51,7 @@ export function BillingTabs() {
   const [purchasing, setPurchasing] = React.useState<string | null>(null)
   const [billingPeriod, setBillingPeriod] = React.useState<'monthly' | 'annually'>('monthly')
   const [showTopUp, setShowTopUp] = React.useState(false)
+  const [topUpAmount, setTopUpAmount] = React.useState<string>("50")
 
   const [showPreview, setShowPreview] = React.useState(false)
   const [previewLoading, setPreviewLoading] = React.useState(false)
@@ -222,11 +223,11 @@ export function BillingTabs() {
     )
   }
 
-  if (!data) return (
+  if (!data || !data.current_subscription || !data.subscription_plans) return (
     <div className="flex flex-col items-center justify-center p-12 text-center">
       <Info className="h-12 w-12 text-muted-foreground mb-4" />
-      <h3 className="text-lg font-semibold">Subscription data unavailable</h3>
-      <p className="text-muted-foreground mb-6">We couldn&apos;t load your subscription details right now.</p>
+      <h3 className="text-lg font-semibold">Subscription data incomplete</h3>
+      <p className="text-muted-foreground mb-6">We couldn&apos;t load your subscription details properly right now.</p>
       <Button onClick={fetchData}>Try Again</Button>
     </div>
   )
@@ -365,13 +366,16 @@ export function BillingTabs() {
                 <div className="space-y-3">
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Quick Top Up</p>
                   <div className="grid grid-cols-3 gap-2">
-                    {[10, 25, 50].map((amount) => (
+                    {[10, 50, 500].map((amount) => (
                       <Button
                         key={amount}
                         variant="outline"
                         size="sm"
                         className="font-bold border-muted-foreground/20 hover:border-primary hover:bg-primary/5 hover:text-primary transition-all"
-                        onClick={() => setShowTopUp(true)}
+                        onClick={() => {
+                          setTopUpAmount(amount.toString())
+                          setShowTopUp(true)
+                        }}
                       >
                         +${amount}
                       </Button>
@@ -380,7 +384,10 @@ export function BillingTabs() {
                   <Button
                     variant="secondary"
                     className="w-full gap-2 font-bold mt-2"
-                    onClick={() => setShowTopUp(true)}
+                    onClick={() => {
+                      setTopUpAmount("50")
+                      setShowTopUp(true)
+                    }}
                   >
                     <Plus className="h-4 w-4" />
                     Top Up Wallet
@@ -468,7 +475,7 @@ export function BillingTabs() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {Object.entries(data.subscription_plans).map(([id, plan]) => {
+              {Object.entries(data.subscription_plans || {}).map(([id, plan]) => {
                 const isExactCurrent = currentPlan.package === id && (id === 'FREE' || currentPlan.billing_cycle === billingPeriod || (!currentPlan.billing_cycle && billingPeriod === 'monthly'))
                 const isSamePackage = currentPlan.package === id
                 const price = billingPeriod === 'monthly' ? plan.pricing.monthly : plan.pricing.annually
@@ -684,7 +691,7 @@ export function BillingTabs() {
         </TabsContent>
       </Tabs>
 
-      <TopUpDialog open={showTopUp} onOpenChange={setShowTopUp} />
+      <TopUpDialog open={showTopUp} onOpenChange={setShowTopUp} initialAmount={topUpAmount} />
       <PurchasePreviewModal
         open={showPreview}
         onOpenChange={setShowPreview}

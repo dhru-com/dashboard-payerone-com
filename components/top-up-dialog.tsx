@@ -7,29 +7,68 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Slider } from "@/components/ui/slider"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { getSubscriptionData, createInvoice } from "@/lib/subscription-actions"
 import { SubscriptionResponse, InvoicePurchaseData } from "@/types/subscription"
 import { RedirectingModal } from "./redirecting-modal"
-import { Loader2, Info, CheckCircle2 } from "lucide-react"
+import { Loader2, Info, CheckCircle2, Gift, Wallet, Zap } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
 interface TopUpDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  initialAmount?: string
 }
 
-export function TopUpDialog({ open, onOpenChange }: TopUpDialogProps) {
+export function TopUpDialog({ open, onOpenChange, initialAmount }: TopUpDialogProps) {
   const [loading, setLoading] = React.useState(false)
   const [data, setData] = React.useState<SubscriptionResponse | null>(null)
-  const [purchasing, setPurchasing] = React.useState<string | null>(null)
-  const [selectedPackage, setSelectedPackage] = React.useState<string | null>(null)
+  const [purchasing, setPurchasing] = React.useState(false)
+  const [amount, setAmount] = React.useState<string>("50")
   const [isRedirecting, setIsRedirecting] = React.useState(false)
+
+  React.useEffect(() => {
+    if (open && initialAmount) {
+      setAmount(initialAmount)
+    }
+  }, [open, initialAmount])
+
+  const bonus = React.useMemo(() => {
+    const numAmount = parseFloat(amount)
+    if (isNaN(numAmount) || !data?.wallet_bonus_tiers) return 0
+    const tiers = [...(data.wallet_bonus_tiers || [])].sort((a, b) => b.min_amount - a.min_amount)
+    const tier = tiers.find(t => numAmount >= t.min_amount)
+    return tier ? (numAmount * tier.bonus_percent) / 100 : 0
+  }, [amount, data])
+
+  const currentTier = React.useMemo(() => {
+    const numAmount = parseFloat(amount)
+    if (isNaN(numAmount) || !data?.wallet_bonus_tiers) return null
+    const tiers = [...(data.wallet_bonus_tiers || [])].sort((a, b) => b.min_amount - a.min_amount)
+    return tiers.find(t => numAmount >= t.min_amount) || null
+  }, [amount, data])
+
+  const allowedValues = React.useMemo(() => {
+    const values = [10]
+    for (let i = 50; i <= 1000; i += 50) {
+      values.push(i)
+    }
+    for (let i = 1100; i <= 10000; i += 100) {
+      values.push(i)
+    }
+    return values
+  }, [])
+
+  const sliderIndex = React.useMemo(() => {
+    const numAmount = parseFloat(amount) || 0
+    const index = allowedValues.findIndex(v => v >= numAmount)
+    return index === -1 ? allowedValues.length - 1 : index
+  }, [amount, allowedValues])
 
   React.useEffect(() => {
     if (open && !data) {
@@ -38,31 +77,26 @@ export function TopUpDialog({ open, onOpenChange }: TopUpDialogProps) {
         const result = await getSubscriptionData()
         if (result) {
           setData(result)
-          const packages = Object.keys(result.wallet_packages)
-          if (packages.length > 0) {
-            setSelectedPackage(packages[0])
-          }
         }
         setLoading(false)
       }
       fetchData()
-    } else if (open && data && !selectedPackage) {
-      const packages = Object.keys(data.wallet_packages)
-      if (packages.length > 0) {
-        setSelectedPackage(packages[0])
-      }
     }
-  }, [open, data, selectedPackage])
+  }, [open, data])
 
   const handleBuyCredits = async () => {
-    if (!selectedPackage) return
+    const numAmount = parseFloat(amount)
+    if (isNaN(numAmount) || numAmount <= 0) {
+      toast.error("Please enter a valid amount")
+      return
+    }
 
-    setPurchasing(selectedPackage)
+    setPurchasing(true)
     try {
       const result = await createInvoice({
         preview: false,
         order_type: "WALLET_TOPUP",
-        product_id: selectedPackage,
+        amount: numAmount,
         use_wallet: false
       })
 
@@ -84,105 +118,176 @@ export function TopUpDialog({ open, onOpenChange }: TopUpDialogProps) {
     } catch (error) {
       toast.error("An error occurred during purchase")
     } finally {
-      setPurchasing(null)
+      setPurchasing(false)
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <RedirectingModal open={isRedirecting} />
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">Wallet Top-up</DialogTitle>
-          <DialogDescription>
-            Purchase credits to cover transaction fees. Credits are added instantly to your wallet.
-          </DialogDescription>
+      <DialogContent className="sm:max-w-[850px] p-0 overflow-hidden flex flex-col max-h-[95vh]">
+        <DialogHeader className="p-6 pb-4 border-b">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                <Wallet className="h-5 w-5 text-primary" />
+                Top up prepaid balance
+              </DialogTitle>
+              <DialogDescription className="text-xs">
+                Add credits to your wallet for seamless transaction processing.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        {loading ? (
-          <div className="flex flex-col items-center justify-center p-12 space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground font-medium">Loading packages...</p>
-          </div>
-        ) : !data ? (
-          <div className="flex flex-col items-center justify-center p-12 text-center">
-            <Info className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold">Data unavailable</h3>
-            <p className="text-muted-foreground mb-6">We couldn&apos;t load top-up packages right now.</p>
-            <Button onClick={() => setData(null)}>Try Again</Button>
-          </div>
-        ) : (
-          <>
-            <div className="grid gap-4 py-4 sm:grid-cols-2 lg:grid-cols-3">
-              {Object.entries(data.wallet_packages).map(([id, pkg]) => (
-                <Card
-                  key={id}
-                  className={cn(
-                    "flex flex-col relative overflow-hidden transition-all duration-300 cursor-pointer border-2",
-                    selectedPackage === id
-                      ? "border-primary bg-primary/5 shadow-md"
-                      : "border-border hover:border-primary/50"
-                  )}
-                  onClick={() => setSelectedPackage(id)}
+        <ScrollArea className="flex-1 overflow-y-auto">
+          <div className="p-6">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center p-12 space-y-4">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground font-medium">Loading top-up information...</p>
+              </div>
+            ) : !data ? (
+              <div className="flex flex-col items-center justify-center p-12 text-center">
+                <Info className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold">Data unavailable</h3>
+                <p className="text-muted-foreground mb-6">We couldn&apos;t load top-up information right now.</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setData(null)}
+                  className="font-bold text-[11px] uppercase tracking-wider"
                 >
-                  {selectedPackage === id && (
-                    <div className="absolute top-2 right-2">
-                      <CheckCircle2 className="h-5 w-5 text-primary fill-background" />
-                    </div>
-                  )}
-                  <CardHeader className="pb-3 px-4 pt-4">
-                    <div className="flex items-center justify-between gap-2">
-                      <CardTitle className="text-base">{pkg.name}</CardTitle>
-                      {pkg.badge && (
-                        <Badge variant="outline" className="h-5 px-1.5 text-[9px] font-bold uppercase bg-green-50 text-green-600 border-green-200">
-                          {pkg.badge}
-                        </Badge>
-                      )}
-                    </div>
-                    <CardDescription className="text-[11px] line-clamp-2 min-h-[32px]">{pkg.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pb-4 px-4 flex-1">
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-2xl font-black">${pkg.amount}</span>
-                      <span className="text-muted-foreground text-[10px] font-medium">for ${pkg.credits} credits</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                  Try Again
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-8">
+                <div className="grid gap-8 md:grid-cols-[1fr_300px]">
+                  <div className="space-y-8">
+                    <div className="space-y-6">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        How much would you like to add?
+                      </h3>
 
-            <DialogFooter className="mt-6">
-              <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-4">
-                {selectedPackage && data.wallet_packages[selectedPackage] && (
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Selected: </span>
-                    <span className="font-bold">{data.wallet_packages[selectedPackage].name}</span>
-                    <span className="mx-2 text-muted-foreground">|</span>
-                    <span className="text-muted-foreground">Amount: </span>
-                    <span className="font-bold text-primary">${data.wallet_packages[selectedPackage].amount}</span>
+                      <div className="px-2 pt-6 pb-2">
+                        <Slider
+                          value={[sliderIndex]}
+                          min={0}
+                          max={allowedValues.length - 1}
+                          step={1}
+                          onValueChange={(val) => setAmount(allowedValues[val[0]].toString())}
+                          formatValue={(val) => `$${allowedValues[val]}`}
+                          className="py-4 relative z-0"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                          <Gift className="h-4 w-4" />
+                          Bonus Tiers
+                        </h4>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3">
+                        {(data?.wallet_bonus_tiers || []).map((tier, index) => {
+                          const isActive = currentTier?.min_amount === tier.min_amount;
+                          return (
+                            <div
+                              key={index}
+                              onClick={() => setAmount(tier.min_amount.toString())}
+                              className={cn(
+                                "flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 cursor-pointer",
+                                isActive
+                                  ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20 scale-105"
+                                  : "bg-background text-muted-foreground border-border hover:border-primary/50"
+                              )}
+                            >
+                              <span className="text-sm font-bold">${tier.min_amount}+</span>
+                              <div className={cn(
+                                "w-px h-3",
+                                isActive ? "bg-primary-foreground/30" : "bg-border"
+                              )} />
+                              <span className={cn(
+                                "text-sm font-black",
+                                isActive ? "text-primary-foreground" : "text-primary"
+                              )}>
+                                {tier.bonus_percent}%
+                              </span>
+                              {isActive && <CheckCircle2 className="h-4 w-4" />}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
-                )}
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                  <Button
-                    variant="outline"
-                    onClick={() => onOpenChange(false)}
-                    className="flex-1 sm:flex-none font-semibold"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="default"
-                    className="flex-1 sm:flex-none min-w-[150px] font-bold"
-                    onClick={handleBuyCredits}
-                    disabled={purchasing !== null || !selectedPackage}
-                  >
-                    {purchasing !== null && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Confirm and Pay
-                  </Button>
+
+                  <div className="bg-muted/30 border border-border rounded-[2rem] p-8 flex flex-col justify-between relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                      <Zap className="h-24 w-24 text-primary" />
+                    </div>
+
+                    <div className="space-y-6 relative z-10">
+                      <div className="space-y-1">
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Amount</p>
+                        <p className="text-2xl font-bold">${parseFloat(amount) || 0}</p>
+                      </div>
+
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Bonus Credits</p>
+                          {currentTier && (
+                            <Badge variant="success" className="text-[10px] h-4 px-1 font-bold">
+                              {currentTier.bonus_percent}%
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-2xl font-bold text-green-600">
+                          +${bonus.toFixed(2)}
+                        </p>
+                      </div>
+
+                      <div className="pt-6 border-t border-border/50">
+                        <div className="space-y-1">
+                          <p className="text-xs font-bold text-primary uppercase tracking-widest">Total Credits</p>
+                          <p className="text-3xl font-bold text-primary">
+                            ${((parseFloat(amount) || 0) + bonus).toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </DialogFooter>
-          </>
+            )}
+          </div>
+        </ScrollArea>
+
+        {data && !loading && (
+          <div className="p-4 border-t bg-muted/20 flex items-center gap-3 justify-end">
+            <Button
+              variant="ghost"
+              onClick={() => onOpenChange(false)}
+              className="font-bold text-[11px] uppercase tracking-wider h-10 px-6"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              className="min-w-[180px] h-10 font-bold text-[11px] uppercase tracking-wider transition-all duration-300"
+              onClick={handleBuyCredits}
+              disabled={purchasing || !amount || parseFloat(amount) <= 0}
+            >
+              {purchasing ? (
+                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Zap className="mr-2 h-3.5 w-3.5 fill-current" />
+              )}
+              Confirm & Pay
+            </Button>
+          </div>
         )}
       </DialogContent>
     </Dialog>

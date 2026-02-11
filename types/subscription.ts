@@ -35,24 +35,22 @@ export interface SubscriptionPlan {
   popular?: boolean;
 }
 
-export interface WalletPackage {
-  name: string;
-  amount: number;
-  credits: number;
-  description: string;
-  badge?: string;
+export interface WalletBonusTier {
+  min_amount: number;
+  bonus_percent: number;
 }
 
 export interface SubscriptionResponse {
   current_subscription: SubscriptionV2;
   subscription_plans: Record<string, SubscriptionPlan>;
-  wallet_packages: Record<string, WalletPackage>;
+  wallet_bonus_tiers: WalletBonusTier[];
 }
 
 export interface InvoiceRequest {
   preview: boolean;
   order_type: 'SUBSCRIPTION' | 'WALLET_TOPUP';
-  product_id: string;
+  product_id?: string;
+  amount?: number;
   billing_cycle?: 'monthly' | 'annually';
   auto_renew?: boolean;
   use_wallet?: boolean;
