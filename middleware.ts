@@ -40,15 +40,23 @@ export function middleware(request: NextRequest) {
   if (!token && !isPublicPath) {
     console.log(`[Middleware] No token and not public path, redirecting to /login`);
     // Redirect to login if trying to access a protected route without a token
-    const loginUrl = new URL("/login", request.url);
-    // Add current path as callback if needed, but for now just redirect
-    return NextResponse.redirect(loginUrl);
+    return new NextResponse(null, {
+      status: 307,
+      headers: {
+        Location: "/login",
+      },
+    });
   }
 
   if (token && (pathname === "/login" || pathname.startsWith("/login/"))) {
     console.log(`[Middleware] Token present and at /login, redirecting to /`);
     // Redirect to home if already logged in and trying to access login page
-    return NextResponse.redirect(new URL("/", request.url));
+    return new NextResponse(null, {
+      status: 307,
+      headers: {
+        Location: "/",
+      },
+    });
   }
 
   return NextResponse.next();
