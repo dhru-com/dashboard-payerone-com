@@ -70,6 +70,21 @@ export function TopUpDialog({ open, onOpenChange, initialAmount }: TopUpDialogPr
     return index === -1 ? allowedValues.length - 1 : index
   }, [amount, allowedValues])
 
+  const planInfo = React.useMemo(() => {
+    if (!data?.current_subscription || !data?.subscription_plans) return null
+    const plan = data.subscription_plans[data.current_subscription.package]
+    if (!plan) return null
+
+    const fee = plan.fees.default
+    const totalCredits = (parseFloat(amount) || 0) + bonus
+    const estTx = fee.fixed > 0 ? Math.floor(totalCredits / fee.fixed) : 0
+
+    return {
+      cost: fee.label || `$${fee.fixed.toFixed(2)}`,
+      estTx: estTx
+    }
+  }, [data, amount, bonus])
+
   React.useEffect(() => {
     if (open && !data) {
       const fetchData = async () => {
@@ -266,17 +281,16 @@ export function TopUpDialog({ open, onOpenChange, initialAmount }: TopUpDialogPr
         </ScrollArea>
 
         {data && !loading && (
-          <div className="p-4 border-t bg-muted/20 flex items-center gap-3 justify-end">
-            <Button
-              variant="ghost"
-              onClick={() => onOpenChange(false)}
-              className="font-bold text-[11px] uppercase tracking-wider h-10 px-6"
-            >
-              Cancel
-            </Button>
+          <div className="p-4 border-t bg-muted/20 flex items-center gap-4 justify-between">
+            {planInfo && (
+              <div className="text-[10px] font-medium text-muted-foreground leading-relaxed max-w-[60%]">
+                Total cost <span className="font-bold text-foreground">{planInfo.cost}</span> per transaction &nbsp;
+                Estimated <span className="font-bold text-foreground">{planInfo.estTx}</span> transactions
+              </div>
+            )}
             <Button
               variant="default"
-              className="min-w-[180px] h-10 font-bold text-[11px] uppercase tracking-wider transition-all duration-300"
+              className="min-w-[180px] h-10 font-bold text-[11px] uppercase tracking-wider transition-all duration-300 ml-auto"
               onClick={handleBuyCredits}
               disabled={purchasing || !amount || parseFloat(amount) <= 0}
             >
