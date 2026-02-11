@@ -9,15 +9,14 @@ export async function GET(request: NextRequest) {
 
   if (!token) {
     console.log(`[Autho Route] No token, redirecting to /login`);
-    return NextResponse.redirect(new URL("/login", request.nextUrl.origin));
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   console.log(`[Autho Route] Setting cookie ${AUTH_CONFIG.storageTokenKeyName} and redirecting to /`);
 
   // Create response
   // We want to redirect to the root path of the current origin
-  const origin = request.nextUrl.origin;
-  const response = NextResponse.redirect(new URL("/", origin));
+  const response = NextResponse.redirect(new URL("/", request.url));
 
   const cookieOptions = {
     httpOnly: true,
