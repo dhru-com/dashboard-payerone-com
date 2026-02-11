@@ -3,8 +3,19 @@ import type { NextRequest } from "next/server";
 import { AUTH_CONFIG } from "@/lib/auth-config";
 
 export function middleware(request: NextRequest) {
-  let token = request.cookies.get(AUTH_CONFIG.storageTokenKeyName)?.value;
   const { pathname } = request.nextUrl;
+
+  // Helper to get absolute URL for redirects that works behind proxies
+  const getAbsoluteUrl = (path: string) => {
+    const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || request.nextUrl.host;
+    const proto = request.headers.get("x-forwarded-proto") || (request.nextUrl.protocol === "https:" ? "https" : "http");
+    // Handle potential comma-separated values from multiple proxies
+    const cleanHost = host.split(',')[0].trim();
+    const cleanProto = proto.split(',')[0].trim();
+    return `${cleanProto}://${cleanHost}${path}`;
+  };
+
+  let token = request.cookies.get(AUTH_CONFIG.storageTokenKeyName)?.value;
 
   // Reconstruct token if chunked
   if (!token) {
@@ -37,26 +48,37 @@ export function middleware(request: NextRequest) {
     pathname === "/favicon.ico" ||
     pathname === "/robots.txt";
 
+  // Special handling for unauthorized redirect to login
+  if (pathname === "/login" && request.nextUrl.searchParams.get("error") === "unauthorized") {
+    console.log(`[Middleware] Unauthorized error detected, clearing cookies and staying at /login`);
+    const response = NextResponse.next();
+
+    // Clear main token
+    response.cookies.delete(AUTH_CONFIG.storageTokenKeyName);
+
+    // Clear chunks if any
+    const chunkCount = request.cookies.get(AUTH_CONFIG.chunkCountKeyName)?.value;
+    if (chunkCount) {
+      const count = parseInt(chunkCount, 10);
+      for (let i = 0; i < count; i++) {
+        response.cookies.delete(`${AUTH_CONFIG.chunkPrefix}${i}`);
+      }
+      response.cookies.delete(AUTH_CONFIG.chunkCountKeyName);
+    }
+
+    return response;
+  }
+
   if (!token && !isPublicPath) {
     console.log(`[Middleware] No token and not public path, redirecting to /login`);
     // Redirect to login if trying to access a protected route without a token
-    return new NextResponse(null, {
-      status: 307,
-      headers: {
-        Location: "/login",
-      },
-    });
+    return NextResponse.redirect(new URL(getAbsoluteUrl("/login")));
   }
 
   if (token && (pathname === "/login" || pathname.startsWith("/login/"))) {
     console.log(`[Middleware] Token present and at /login, redirecting to /`);
     // Redirect to home if already logged in and trying to access login page
-    return new NextResponse(null, {
-      status: 307,
-      headers: {
-        Location: "/",
-      },
-    });
+    return NextResponse.redirect(new URL(getAbsoluteUrl("/")));
   }
 
   return NextResponse.next();

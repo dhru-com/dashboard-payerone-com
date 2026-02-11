@@ -1,6 +1,7 @@
 "use server"
 
 import { apiFetch } from "./api-client";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { ApiResponse } from "@/types/auth";
 import { revalidatePath } from "next/cache";
 import { ForwardingAddress, ForwardingAddressPayload } from "@/types/forwarding-address";
@@ -16,6 +17,7 @@ export async function getForwardingAddresses() {
       return Object.values(result.data || {});
     }
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Failed to fetch forwarding addresses:", error);
   }
   return [];
@@ -34,6 +36,7 @@ export async function addForwardingAddress(payload: ForwardingAddressPayload) {
 
     return result;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Failed to add forwarding address:", error);
     return {
       status: "error",
@@ -55,6 +58,7 @@ export async function updateForwardingAddress(uuid: string, payload: ForwardingA
 
     return result;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Failed to update forwarding address:", error);
     return {
       status: "error",
@@ -75,6 +79,7 @@ export async function deleteForwardingAddress(uuid: string) {
 
     return result;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Failed to delete forwarding address:", error);
     return {
       status: "error",
@@ -109,6 +114,7 @@ export async function getExpressWalletCustomers(params: {
       };
     }
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Failed to fetch express wallet customers:", error);
   }
   return {

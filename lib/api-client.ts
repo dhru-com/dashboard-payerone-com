@@ -1,6 +1,8 @@
 import "server-only";
 import { AUTH_CONFIG } from "@/lib/auth-config";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 
 /**
  * Gets the API base URL.
@@ -69,7 +71,7 @@ export async function apiFetch<T>(
     if (!response.ok) {
       if (response.status === 401) {
         console.warn(`[apiFetch] 401 Unauthorized for ${endpoint}. Token might be invalid.`);
-        throw new Error("Unauthorized");
+        redirect("/login?error=unauthorized");
       }
 
       let errorMessage = `API error: ${response.status}`;
@@ -87,13 +89,21 @@ export async function apiFetch<T>(
     const data = await response.json();
 
     if (data && typeof data === 'object' && 'status' in data && data.status === 'error') {
-      const errorObj = data as { message?: string; error?: string; msg?: string };
-      console.error(`[apiFetch] Logic error for ${endpoint}:`, errorObj);
+      const errorObj = data as { message?: string; error?: string; msg?: string; code?: number };
+      console.error(`[apiFetch] Logic error for ${endpoint}:`, JSON.stringify(errorObj));
+
+      // Check if the error code indicates unauthorized or forbidden
+      if (errorObj.code === 401 || errorObj.code === 403) {
+        console.warn(`[apiFetch] ${errorObj.code} Unauthorized/Forbidden in response body for ${endpoint}.`);
+        redirect("/login?error=unauthorized");
+      }
+
       throw new Error(errorObj.message || errorObj.error || errorObj.msg || 'API logic error');
     }
 
     return data as T;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error(`[apiFetch] Fetch failed for ${endpoint}:`, error instanceof Error ? error.message : error);
     throw error;
   }

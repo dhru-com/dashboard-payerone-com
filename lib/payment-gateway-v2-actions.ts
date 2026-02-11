@@ -1,6 +1,7 @@
 "use server"
 
 import { apiFetch } from "./api-client";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { PaymentGatewayV2Response, Router, GatewayInventoryItem } from "@/types/payment-gateway-v2";
 import { revalidatePath } from "next/cache";
 
@@ -11,6 +12,7 @@ export async function getPaymentGatewaysV2(module?: "inventory" | "routers") {
     const endpoint = module ? `${ENDPOINT}?module=${module}` : ENDPOINT;
     return await apiFetch<PaymentGatewayV2Response>(endpoint);
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error(`Failed to fetch payment gateways V2 (${module || 'all'}):`, error);
     return null;
   }
@@ -53,6 +55,7 @@ export async function addGateway(payload: {
 
     return result;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Failed to add/update gateway:", error);
     return {
       status: "error",
@@ -87,6 +90,7 @@ export async function addRouter(payload: Omit<Router, 'uuid'> & { uuid?: string 
 
     return result;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Failed to add/update router:", error);
     return {
       status: "error",
@@ -100,6 +104,7 @@ export async function getCheckoutSimulator(token: string, amount: number, at: nu
     const url = `checkout/v1/orders_v2?token=${token}&amount=${amount}&at=${at}`;
     return await apiFetch<Record<string, unknown>>(url);
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Failed to fetch checkout simulator:", error);
     return null;
   }
@@ -121,6 +126,7 @@ export async function deleteGatewayV2(id: string) {
 
     return result;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Failed to delete gateway:", error);
     return {
       status: "error",
@@ -145,6 +151,7 @@ export async function deleteRouterV2(id: string) {
 
     return result;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Failed to delete router:", error);
     return {
       status: "error",

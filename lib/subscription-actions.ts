@@ -1,6 +1,7 @@
 "use server"
 
 import { apiFetch } from "./api-client";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { ApiResponse } from "@/types/auth";
 import { SubscriptionResponse, InvoiceRequest, InvoicePreviewData, InvoicePurchaseData, InvoiceV2, InvoiceDetailsV2 } from "@/types/subscription";
 
@@ -14,6 +15,7 @@ export async function getSubscriptionData() {
     }
     return null;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Error fetching subscription data:", error);
     return null;
   }
@@ -33,6 +35,7 @@ export async function purchaseSubscription(planId: string, period: 'monthly' | '
     });
     return result;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Error purchasing subscription:", error);
     return {
       status: "error",
@@ -51,6 +54,7 @@ export async function createInvoice(params: InvoiceRequest) {
     });
     return result;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Error creating invoice:", error);
     return {
       status: "error",
@@ -69,6 +73,7 @@ export async function updateSubscription(data: { auto_renew: boolean }) {
     });
     return result;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Error updating subscription:", error);
     return {
       status: "error",
@@ -89,6 +94,7 @@ export async function getInvoices() {
     }
     return [];
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Error fetching invoices:", error);
     return [];
   }
@@ -101,6 +107,7 @@ export async function getInvoiceDetails(uuid: string) {
     });
     return result;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Error fetching invoice details:", error);
     return {
       status: "error",

@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { AUTH_CONFIG } from "@/lib/auth-config";
 import { redirect } from "next/navigation";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { apiFetch } from "./api-client";
 import { ApiResponse, LoginInitResponse, MerchantApiKeyData, User, NotificationPreferences } from "@/types/auth";
 import { cache } from "react";
@@ -61,6 +62,7 @@ export const getLoginInitData = cache(async () => {
     console.warn(`[getLoginInitData] API returned non-success status: ${result?.status}`);
     return null;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     if (error instanceof Error && error.message.includes('Dynamic server usage')) {
       throw error;
     }
@@ -78,6 +80,7 @@ export async function checkTelegramConnection() {
       return result.data.telegram_connected === true;
     }
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     if (error instanceof Error && error.message.includes('Dynamic server usage')) {
       throw error;
     }

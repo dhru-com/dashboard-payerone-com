@@ -1,6 +1,7 @@
 "use server"
 
 import { apiFetch } from "./api-client";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { ApiResponse } from "@/types/auth";
 import { DashboardData, DashboardSummaryData } from "@/types/dashboard";
 import { Order } from "@/components/orders-data-table";
@@ -34,6 +35,7 @@ export async function getDashboardData(date?: string, stats?: string[]) {
     }
     return null;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("[getDashboardData] Error fetching dashboard data:", error instanceof Error ? error.message : error);
     return null;
   }
@@ -55,6 +57,7 @@ export async function getDashboardSummary(date?: string) {
     }
     return null;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("[getDashboardSummary] Error fetching dashboard summary:", error instanceof Error ? error.message : error);
     return null;
   }
@@ -74,6 +77,7 @@ export async function getRecentOrders() {
     }
     return null;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("[getRecentOrders] Error fetching orders:", error instanceof Error ? error.message : error);
     return null;
   }
@@ -93,6 +97,7 @@ export async function getRecentTransactions() {
     }
     return null;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("[getRecentTransactions] Error fetching transactions:", error instanceof Error ? error.message : error);
     return null;
   }

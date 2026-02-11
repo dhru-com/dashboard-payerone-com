@@ -5,6 +5,7 @@
 "use server"
 
 import { apiFetch } from "./api-client";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { PaymentGatewayResponse, Visibility } from "@/types/payment-gateway";
 import { revalidatePath } from "next/cache";
 
@@ -19,6 +20,7 @@ export async function getPaymentGateways() {
   try {
     return await apiFetch<PaymentGatewayResponse>("payment_gateway");
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Failed to fetch payment gateways:", error);
     return null;
   }
@@ -39,6 +41,7 @@ export async function addPaymentGateway(payload: GatewayPayload) {
 
     return result;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Failed to add payment gateway:", error);
     return {
       status: "error",
@@ -63,6 +66,7 @@ export async function updatePaymentGateway(uuid: string, payload: GatewayPayload
 
     return result;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Failed to update payment gateway:", error);
     return {
       status: "error",
@@ -84,6 +88,7 @@ export async function deletePaymentGateway(uuid: string) {
 
     return result;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Failed to delete payment gateway:", error);
     return {
       status: "error",

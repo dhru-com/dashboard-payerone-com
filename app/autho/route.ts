@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { AUTH_CONFIG } from "@/lib/auth-config";
 
 export async function GET(request: NextRequest) {
+  // Helper to get absolute URL for redirects that works behind proxies
+  const getAbsoluteUrl = (path: string) => {
+    const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || request.nextUrl.host;
+    const proto = request.headers.get("x-forwarded-proto") || (request.nextUrl.protocol === "https:" ? "https" : "http");
+    // Handle potential comma-separated values from multiple proxies
+    const cleanHost = host.split(',')[0].trim();
+    const cleanProto = proto.split(',')[0].trim();
+    return `${cleanProto}://${cleanHost}${path}`;
+  };
+
   const searchParams = request.nextUrl.searchParams;
   const token = searchParams.get("token") || searchParams.get("t");
 
@@ -9,28 +19,20 @@ export async function GET(request: NextRequest) {
 
   if (!token) {
     console.log(`[Autho Route] No token, redirecting to /login`);
-    return new NextResponse(null, {
-      status: 307,
-      headers: {
-        Location: "/login",
-      },
-    });
+    return NextResponse.redirect(new URL(getAbsoluteUrl("/login")));
   }
 
   console.log(`[Autho Route] Setting cookie ${AUTH_CONFIG.storageTokenKeyName} and redirecting to /`);
 
   // Create response
-  // We want to redirect to the root path of the current origin
-  const response = new NextResponse(null, {
-    status: 307,
-    headers: {
-      Location: "/",
-    },
-  });
+  const response = NextResponse.redirect(new URL(getAbsoluteUrl("/")));
+
+  const proto = request.headers.get("x-forwarded-proto") || (request.nextUrl.protocol === "https:" ? "https" : "http");
+  const isSecure = proto.split(',')[0].trim() === "https";
 
   const cookieOptions = {
     httpOnly: true,
-    secure: request.nextUrl.protocol === "https:",
+    secure: isSecure,
     sameSite: "lax" as const,
     path: "/",
     maxAge: 30 * 24 * 60 * 60, // 30 days

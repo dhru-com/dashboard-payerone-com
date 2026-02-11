@@ -1,6 +1,7 @@
 "use server"
 
 import { apiFetch } from "./api-client";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { ApiResponse } from "@/types/auth";
 import { revalidatePath } from "next/cache";
 
@@ -25,6 +26,7 @@ export async function addMerchantAddress(payload: MerchantAddressPayload) {
 
     return result;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Failed to add merchant address:", error);
     return {
       status: "error",
@@ -46,6 +48,7 @@ export async function updateMerchantAddress(uuid: string, payload: MerchantAddre
 
     return result;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Failed to update merchant address:", error);
     return {
       status: "error",
@@ -66,6 +69,7 @@ export async function deleteMerchantAddress(uuid: string) {
 
     return result;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Failed to delete merchant address:", error);
     return {
       status: "error",

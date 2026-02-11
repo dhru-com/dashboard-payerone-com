@@ -1,6 +1,7 @@
 "use server"
 
 import { apiFetch } from "./api-client";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { ApiResponse } from "@/types/auth";
 import { getSession } from "./auth-actions";
 
@@ -55,6 +56,7 @@ export async function getUploadUrl(fileName: string, fileType: string) {
     const data = await response.json();
     return data;
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Failed to get upload URL:", error);
     return {
       status: "error",

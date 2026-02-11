@@ -1,6 +1,7 @@
 "use server"
 
 import { apiFetch } from "./api-client";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { ApiResponse } from "@/types/auth";
 import {
   Webhook,
@@ -25,6 +26,7 @@ export async function getWebhooks() {
     }
     return [];
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Failed to fetch webhooks:", error);
     return [];
   }
@@ -43,6 +45,7 @@ export async function createWebhook(payload: CreateWebhookPayload) {
     }
     return { success: false, message: result?.message || "Failed to create webhook" };
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     const message = error instanceof Error ? error.message : "An error occurred";
     return { success: false, message };
   }
@@ -61,6 +64,7 @@ export async function updateWebhook(uuid: string, payload: UpdateWebhookPayload)
     }
     return { success: false, message: result?.message || "Failed to update webhook" };
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     const message = error instanceof Error ? error.message : "An error occurred";
     return { success: false, message };
   }
@@ -78,6 +82,7 @@ export async function deleteWebhook(uuid: string) {
     }
     return { success: false, message: result?.message || "Failed to delete webhook" };
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     const message = error instanceof Error ? error.message : "An error occurred";
     return { success: false, message };
   }
@@ -94,6 +99,7 @@ export async function testWebhook(uuid: string) {
     }
     return { success: false, message: result?.message || "Failed to test webhook" };
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     const message = error instanceof Error ? error.message : "An error occurred";
     return { success: false, message };
   }
