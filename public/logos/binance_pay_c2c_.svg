@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" id="binance">
+  <g>
+    <circle cx="32" cy="32" r="29" fill="#ffe477"></circle>
+    <circle cx="32" cy="32" r="25" fill="#ffda44"></circle>
+    <path fill="#ffde55" d="M32.145,3a29.023,29.023,0,0,1,.69,4.017A25,25,0,1,1,7.924,38.729,29.35,29.35,0,0,1,4,39c-.049,0-.1,0-.145,0A29,29,0,1,0,32.145,3Z"></path>
+    <path fill="#ffcd00" d="M32,57a25,25,0,0,0,.835-49.979A29.013,29.013,0,0,1,33,10,29,29,0,0,1,7.924,38.729,25,25,0,0,0,32,57Z"></path>
+    <polygon fill="#f1f2f2" points="32 20.686 39.778 28.464 44.021 24.222 32 12.201 19.979 24.222 24.222 28.464 32 20.686"></polygon>
+    <polygon fill="#f1f2f2" points="32 43.314 24.222 35.536 19.979 39.778 32 51.799 44.021 39.778 39.778 35.536 32 43.314"></polygon>
+    <rect width="6" height="6" x="29" y="29" fill="#f1f2f2" transform="rotate(-45 32 32)"></rect>
+    <rect width="6" height="6" x="44.556" y="29" fill="#f1f2f2" transform="rotate(-45 47.557 32)"></rect>
+    <rect width="6" height="6" x="13.444" y="29" fill="#f1f2f2" transform="rotate(-45 16.444 32)"></rect>
+  </g>
+</svg>
