@@ -70,8 +70,10 @@ export interface InvoicePreviewData {
 }
 
 export interface InvoicePurchaseData {
-  order_url: string;
-  order_id: string;
+  order_url?: string;
+  order_id?: string;
+  plan?: string;
+  amount_paid?: number;
 }
 
 export interface InvoiceV2 {

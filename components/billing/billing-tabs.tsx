@@ -22,6 +22,7 @@ import { createInvoice } from "@/lib/subscription-actions"
 import { InvoicePreviewData, InvoicePurchaseData } from "@/types/subscription"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
+import { RedirectingModal } from "../redirecting-modal"
 import {
   Table,
   TableBody,
@@ -61,6 +62,7 @@ export function BillingTabs() {
 
   const [selectedInvoiceUuid, setSelectedInvoiceUuid] = React.useState<string | null>(null)
   const [showInvoiceDetails, setShowInvoiceDetails] = React.useState(false)
+  const [isRedirecting, setIsRedirecting] = React.useState(false)
 
   const fetchData = React.useCallback(async () => {
     setLoading(true)
@@ -160,8 +162,16 @@ export function BillingTabs() {
 
       if (result.status === "success" && result.data) {
         const purchaseData = result.data as InvoicePurchaseData
-        toast.success("Redirecting to payment...")
-        window.location.href = purchaseData.order_url
+        if (purchaseData.order_url) {
+          setIsRedirecting(true)
+          toast.success("Redirecting to payment...")
+          window.location.href = purchaseData.order_url
+        } else {
+          toast.success(result.message || "Plan activated successfully")
+          setTimeout(() => {
+            window.location.reload()
+          }, 1500)
+        }
       } else {
         toast.error(result.message || "Failed to process purchase")
       }
@@ -241,6 +251,7 @@ export function BillingTabs() {
 
   return (
       <div className="space-y-8 px-4 md:px-0">
+      <RedirectingModal open={isRedirecting} />
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-8">
         <div className="mx-auto w-full overflow-x-auto pb-1">
           <TabsList className="w-full justify-start md:w-auto">

@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { getSubscriptionData, createInvoice } from "@/lib/subscription-actions"
 import { SubscriptionResponse, InvoicePurchaseData } from "@/types/subscription"
+import { RedirectingModal } from "./redirecting-modal"
 import { Loader2, Info, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
@@ -28,6 +29,7 @@ export function TopUpDialog({ open, onOpenChange }: TopUpDialogProps) {
   const [data, setData] = React.useState<SubscriptionResponse | null>(null)
   const [purchasing, setPurchasing] = React.useState<string | null>(null)
   const [selectedPackage, setSelectedPackage] = React.useState<string | null>(null)
+  const [isRedirecting, setIsRedirecting] = React.useState(false)
 
   React.useEffect(() => {
     if (open && !data) {
@@ -54,7 +56,7 @@ export function TopUpDialog({ open, onOpenChange }: TopUpDialogProps) {
 
   const handleBuyCredits = async () => {
     if (!selectedPackage) return
-    
+
     setPurchasing(selectedPackage)
     try {
       const result = await createInvoice({
@@ -66,8 +68,16 @@ export function TopUpDialog({ open, onOpenChange }: TopUpDialogProps) {
 
       if (result.status === "success" && result.data) {
         const purchaseData = result.data as InvoicePurchaseData
-        toast.success("Redirecting to payment...")
-        window.location.href = purchaseData.order_url
+        if (purchaseData.order_url) {
+          setIsRedirecting(true)
+          toast.success("Redirecting to payment...")
+          window.location.href = purchaseData.order_url
+        } else {
+          toast.success(result.message || "Purchase completed successfully")
+          setTimeout(() => {
+            window.location.reload()
+          }, 1500)
+        }
       } else {
         toast.error(result.message || "Failed to process purchase")
       }
@@ -80,6 +90,7 @@ export function TopUpDialog({ open, onOpenChange }: TopUpDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
+      <RedirectingModal open={isRedirecting} />
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">Wallet Top-up</DialogTitle>
