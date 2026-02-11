@@ -104,11 +104,11 @@ export function ChartAreaInteractive() {
     return {
       current: {
         label: currentDataset?.label || "Current",
-        color: "hsl(var(--chart-1))",
+        color: "var(--chart-1)",
       },
       previous: {
         label: previousDataset?.label || "Previous",
-        color: "hsl(var(--chart-2))",
+        color: "var(--chart-2)",
       },
     } satisfies ChartConfig
   }, [dashboardData])
@@ -269,7 +269,7 @@ export function ChartAreaInteractive() {
                 />
                 <YAxis hide />
                 <ChartTooltip
-                  cursor={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1 }}
+                  cursor={{ stroke: 'var(--muted-foreground)', strokeWidth: 1 }}
                   content={
                     <ChartTooltipContent
                       indicator="dot"
