@@ -167,7 +167,7 @@ export function AppSidebar({ user, ...props }: React.ComponentProps<typeof Sideb
         <NavPayments items={data.payments} />
         <NavDeveloper items={data.developer} />
 
-        <NavDevelopment />
+        {process.env.NODE_ENV !== "production" && <NavDevelopment />}
       </SidebarContent>
       <SidebarFooter>
         <NavWallet balance={sidebarUser.wallet_balance} />

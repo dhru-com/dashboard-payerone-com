@@ -9,13 +9,15 @@ export async function GET(request: NextRequest) {
 
   if (!token) {
     console.log(`[Autho Route] No token, redirecting to /login`);
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(new URL("/login", request.nextUrl.origin));
   }
 
   console.log(`[Autho Route] Setting cookie ${AUTH_CONFIG.storageTokenKeyName} and redirecting to /`);
-  
+
   // Create response
-  const response = NextResponse.redirect(new URL("/", request.url));
+  // We want to redirect to the root path of the current origin
+  const origin = request.nextUrl.origin;
+  const response = NextResponse.redirect(new URL("/", origin));
 
   const cookieOptions = {
     httpOnly: true,
@@ -32,7 +34,7 @@ export async function GET(request: NextRequest) {
   if (token.length > CHUNK_SIZE) {
     const chunks = Math.ceil(token.length / CHUNK_SIZE);
     console.log(`[Autho Route] Token size (${token.length}) exceeds chunk size, splitting into ${chunks} chunks`);
-    
+
     for (let i = 0; i < chunks; i++) {
       const chunk = token.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
       response.cookies.set(`${AUTH_CONFIG.chunkPrefix}${i}`, chunk, cookieOptions);
