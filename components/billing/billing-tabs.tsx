@@ -41,6 +41,186 @@ import {
 } from "@/components/ui/empty"
 
 export function BillingTabs() {
+  const isProduction = process.env.NODE_ENV === 'production'
+
+  const ManageSubscriptionContent = () => {
+    if (isProduction) {
+      return (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-20 text-center">
+            <Clock className="h-12 w-12 text-primary mb-4 animate-pulse" />
+            <h3 className="text-2xl font-bold mb-2">Coming Soon</h3>
+            <p className="text-muted-foreground max-w-md">
+              We are working on bringing subscription management directly to your dashboard. Stay tuned!
+            </p>
+          </CardContent>
+        </Card>
+      )
+    }
+
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex justify-center mb-2">
+          <Tabs
+            value={billingPeriod}
+            onValueChange={(v) => setBillingPeriod(v as 'monthly' | 'annually')}
+            className="w-full max-w-[400px]"
+          >
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="monthly" className="font-bold">Monthly</TabsTrigger>
+              <TabsTrigger value="annually" className="font-bold">Annually</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {Object.entries(data?.subscription_plans || {}).map(([id, plan]) => {
+            const isExactCurrent = currentPlan.package === id && (id === 'FREE' || currentPlan.billing_cycle === billingPeriod || (!currentPlan.billing_cycle && billingPeriod === 'monthly'))
+            const isSamePackage = currentPlan.package === id
+            const price = billingPeriod === 'monthly' ? plan.pricing.monthly : plan.pricing.annually
+            const isPopular = plan.popular
+
+            const planHierarchy: Record<string, number> = {
+              'FREE': 1,
+              'STARTER': 2,
+              'PRO': 3
+            }
+
+            const currentTier = planHierarchy[currentPlan.package] || 0
+            const targetTier = planHierarchy[id] || 0
+
+            let buttonText = `Upgrade to ${plan.name}`
+            if (isExactCurrent) {
+              buttonText = 'Current Plan'
+            } else if (isSamePackage) {
+              buttonText = billingPeriod === 'annually' ? 'Switch to Annual' : 'Switch to Monthly'
+            } else if (targetTier < currentTier) {
+              buttonText = `Downgrade to ${plan.name}`
+            }
+
+            return (
+              <Card
+                key={id}
+                className={cn(
+                  "flex flex-col relative overflow-hidden transition-all duration-300",
+                  isExactCurrent ? "border-primary ring-1 ring-primary" : "border-border hover:border-primary/50",
+                  isPopular && !isExactCurrent ? "border-[#e6e2fb] bg-[#e6e2fb]/10" : ""
+                )}
+              >
+                {isPopular && (
+                  <div className="absolute top-0 right-0">
+                    <div className="bg-[#e6e2fb] text-[#5e4db2] text-[10px] font-bold px-3 py-1 rounded-bl-lg flex items-center gap-1 uppercase tracking-wider">
+                      <Star className="h-3 w-3 fill-current" />
+                      Popular
+                    </div>
+                  </div>
+                )}
+
+                <CardHeader className="pb-4 p-4 md:p-6">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-xl">{plan.name}</CardTitle>
+                      {plan.badge && (
+                        <Badge variant="outline" className="h-5 px-1.5 text-[9px] font-bold uppercase bg-primary/5 text-primary border-primary/20">
+                          {plan.badge}
+                        </Badge>
+                      )}
+                    </div>
+                    <CardDescription className="min-h-[40px] text-sm">{plan.short_description}</CardDescription>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="flex-1 flex flex-col gap-6 p-4 md:p-6 pt-0 md:pt-0">
+                  <div className="space-y-1">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-4xl font-black tracking-tight">${price}</span>
+                      <span className="text-muted-foreground font-medium">/{billingPeriod === 'monthly' ? 'mo' : 'yr'}</span>
+                    </div>
+                    {billingPeriod === 'annually' && price > 0 && (
+                      <p className="text-[10px] text-green-600 font-bold uppercase tracking-wide">
+                        Save ${ (plan.pricing.monthly * 12 - plan.pricing.annually).toFixed(0) } per year
+                      </p>
+                    )}
+                  </div>
+
+                  <Separator className="opacity-50" />
+
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Zap className="h-4 w-4 text-primary" />
+                      <h4 className="text-xs font-bold uppercase tracking-wider">Fee Structure</h4>
+                    </div>
+
+                    <div className="rounded-xl border bg-muted/30 overflow-hidden">
+                      <div className="p-3 border-b bg-muted/50 flex justify-between items-center">
+                        <span className="text-xs font-semibold text-muted-foreground">Transaction Fee</span>
+                        <span className="text-sm font-bold">
+                        {plan.fees.default.label || `$${plan.fees.default.fixed.toFixed(2)} + ${plan.fees.default.percent}%`}
+                      </span>
+                      </div>
+
+                      <div className="p-3 space-y-2">
+                        {/*<p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">Gateway Specific Fees</p>*/}
+                        <ScrollArea className="h-[100px] pr-4">
+                          <div className="space-y-2">
+                            {Object.entries(plan.fees.gateways).map(([gw, fee]) => (
+                              <div key={gw} className="flex justify-between items-center text-[11px] group">
+                                <span className="capitalize text-muted-foreground group-hover:text-foreground transition-colors">{gw.replace(/_/g, ' ')}</span>
+                                <span className="font-semibold">{fee.label || `$${fee.fixed.toFixed(2)} + ${fee.percent}%`}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Plus className="h-4 w-4 text-primary" />
+                      <h4 className="text-xs font-bold uppercase tracking-wider">What&apos;s Included</h4>
+                    </div>
+                    <ul className="space-y-2">
+                      {plan.features.map((feature, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-xs text-muted-foreground">
+                          <Check className="h-3.5 w-3.5 text-green-600 mt-0.5 shrink-0" />
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </CardContent>
+
+                <CardFooter className="p-4 md:p-6 pt-6 md:pt-6 bg-transparent border-t-0">
+                  <Button
+                    className={cn(
+                      "w-full h-11 font-bold transition-all duration-300",
+                      isExactCurrent
+                        ? "bg-muted text-muted-foreground hover:bg-muted cursor-default"
+                        : isPopular
+                          ? "bg-[#e6e2fb] hover:bg-[#dcd7f7] text-[#5e4db2]"
+                          : "bg-primary hover:bg-primary/90 text-primary-foreground"
+                    )}
+                    variant={isExactCurrent ? "secondary" : "default"}
+                    disabled={isExactCurrent || purchasing !== null}
+                    onClick={() => handlePurchase(id)}
+                  >
+                    {purchasing === id ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : isExactCurrent ? (
+                      <Check className="mr-2 h-4 w-4" />
+                    ) : null}
+                    {buttonText}
+                  </Button>
+                </CardFooter>
+              </Card>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
@@ -257,7 +437,7 @@ export function BillingTabs() {
         <div className="mx-auto w-full overflow-x-auto pb-1">
           <TabsList className="w-full justify-start md:w-auto">
             <TabsTrigger value="subscription">Subscription</TabsTrigger>
-            <TabsTrigger value="manage">Manage Subscription</TabsTrigger>
+            {!isProduction && <TabsTrigger value="manage">Manage Subscription</TabsTrigger>}
             <TabsTrigger value="invoices">Invoices</TabsTrigger>
           </TabsList>
         </div>
@@ -325,9 +505,10 @@ export function BillingTabs() {
                     <Button
                       onClick={() => handleTabChange("manage")}
                       className="w-full gap-2 font-bold"
+                      disabled={isProduction}
                     >
-                      {isFreePlan ? "Upgrade Plan" : "Manage Plan"}
-                      <ArrowRight className="h-4 w-4" />
+                      {isProduction ? "Coming Soon" : (isFreePlan ? "Upgrade Plan" : "Manage Plan")}
+                      {!isProduction && <ArrowRight className="h-4 w-4" />}
                     </Button>
                     {!isFreePlan && (
                       <div className="flex items-center justify-between p-3 rounded-xl border bg-muted/30">
@@ -460,164 +641,7 @@ export function BillingTabs() {
         </TabsContent>
 
         <TabsContent value="manage" className="w-full space-y-8 max-w-6xl mx-auto">
-          <div className="flex flex-col gap-6">
-            <div className="flex justify-center mb-2">
-              <Tabs
-                  value={billingPeriod}
-                  onValueChange={(v) => setBillingPeriod(v as 'monthly' | 'annually')}
-                  className="w-full max-w-[400px]"
-              >
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="monthly" className="font-bold">Monthly</TabsTrigger>
-                  <TabsTrigger value="annually" className="font-bold">Annually</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {Object.entries(data.subscription_plans || {}).map(([id, plan]) => {
-                const isExactCurrent = currentPlan.package === id && (id === 'FREE' || currentPlan.billing_cycle === billingPeriod || (!currentPlan.billing_cycle && billingPeriod === 'monthly'))
-                const isSamePackage = currentPlan.package === id
-                const price = billingPeriod === 'monthly' ? plan.pricing.monthly : plan.pricing.annually
-                const isPopular = plan.popular
-
-                const planHierarchy: Record<string, number> = {
-                  'FREE': 1,
-                  'STARTER': 2,
-                  'PRO': 3
-                }
-
-                const currentTier = planHierarchy[currentPlan.package] || 0
-                const targetTier = planHierarchy[id] || 0
-
-                let buttonText = `Upgrade to ${plan.name}`
-                if (isExactCurrent) {
-                  buttonText = 'Current Plan'
-                } else if (isSamePackage) {
-                  buttonText = billingPeriod === 'annually' ? 'Switch to Annual' : 'Switch to Monthly'
-                } else if (targetTier < currentTier) {
-                  buttonText = `Downgrade to ${plan.name}`
-                }
-
-                return (
-                    <Card
-                        key={id}
-                        className={cn(
-                            "flex flex-col relative overflow-hidden transition-all duration-300",
-                            isExactCurrent ? "border-primary ring-1 ring-primary" : "border-border hover:border-primary/50",
-                            isPopular && !isExactCurrent ? "border-[#e6e2fb] bg-[#e6e2fb]/10" : ""
-                        )}
-                    >
-                      {isPopular && (
-                          <div className="absolute top-0 right-0">
-                            <div className="bg-[#e6e2fb] text-[#5e4db2] text-[10px] font-bold px-3 py-1 rounded-bl-lg flex items-center gap-1 uppercase tracking-wider">
-                              <Star className="h-3 w-3 fill-current" />
-                              Popular
-                            </div>
-                          </div>
-                      )}
-
-                      <CardHeader className="pb-4 p-4 md:p-6">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <CardTitle className="text-xl">{plan.name}</CardTitle>
-                            {plan.badge && (
-                                <Badge variant="outline" className="h-5 px-1.5 text-[9px] font-bold uppercase bg-primary/5 text-primary border-primary/20">
-                                  {plan.badge}
-                                </Badge>
-                            )}
-                          </div>
-                          <CardDescription className="min-h-[40px] text-sm">{plan.short_description}</CardDescription>
-                        </div>
-                      </CardHeader>
-
-                      <CardContent className="flex-1 flex flex-col gap-6 p-4 md:p-6 pt-0 md:pt-0">
-                        <div className="space-y-1">
-                          <div className="flex items-baseline gap-1">
-                            <span className="text-4xl font-black tracking-tight">${price}</span>
-                            <span className="text-muted-foreground font-medium">/{billingPeriod === 'monthly' ? 'mo' : 'yr'}</span>
-                          </div>
-                          {billingPeriod === 'annually' && price > 0 && (
-                              <p className="text-[10px] text-green-600 font-bold uppercase tracking-wide">
-                                Save ${ (plan.pricing.monthly * 12 - plan.pricing.annually).toFixed(0) } per year
-                              </p>
-                          )}
-                        </div>
-
-                        <Separator className="opacity-50" />
-
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2">
-                            <Zap className="h-4 w-4 text-primary" />
-                            <h4 className="text-xs font-bold uppercase tracking-wider">Fee Structure</h4>
-                          </div>
-
-                          <div className="rounded-xl border bg-muted/30 overflow-hidden">
-                            <div className="p-3 border-b bg-muted/50 flex justify-between items-center">
-                              <span className="text-xs font-semibold text-muted-foreground">Transaction Fee</span>
-                              <span className="text-sm font-bold">
-                              {plan.fees.default.label || `$${plan.fees.default.fixed.toFixed(2)} + ${plan.fees.default.percent}%`}
-                            </span>
-                            </div>
-
-                            <div className="p-3 space-y-2">
-                              {/*<p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">Gateway Specific Fees</p>*/}
-                              <ScrollArea className="h-[100px] pr-4">
-                                <div className="space-y-2">
-                                  {Object.entries(plan.fees.gateways).map(([gw, fee]) => (
-                                      <div key={gw} className="flex justify-between items-center text-[11px] group">
-                                        <span className="capitalize text-muted-foreground group-hover:text-foreground transition-colors">{gw.replace(/_/g, ' ')}</span>
-                                        <span className="font-semibold">{fee.label || `$${fee.fixed.toFixed(2)} + ${fee.percent}%`}</span>
-                                      </div>
-                                  ))}
-                                </div>
-                              </ScrollArea>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-3">
-                          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Included Features</h4>
-                          <ul className="space-y-2.5">
-                            {plan.features.map((feature, index) => (
-                                <li key={index} className="flex items-start gap-2.5 text-sm">
-                                  <div className="mt-1 rounded-full bg-primary/10 p-0.5">
-                                    <Check className="h-3 w-3 text-primary" />
-                                  </div>
-                                  <span className="leading-tight">{feature}</span>
-                                </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </CardContent>
-
-                      <CardFooter className="p-4 md:p-6 pt-6 md:pt-6 bg-transparent border-t-0">
-                        <Button
-                            className={cn(
-                                "w-full h-11 font-bold transition-all duration-300",
-                                isExactCurrent
-                                    ? "bg-muted text-muted-foreground hover:bg-muted cursor-default"
-                                    : isPopular
-                                        ? "bg-[#e6e2fb] hover:bg-[#dcd7f7] text-[#5e4db2]"
-                                        : "bg-primary hover:bg-primary/90 text-primary-foreground"
-                            )}
-                            variant={isExactCurrent ? "secondary" : "default"}
-                            disabled={isExactCurrent || purchasing !== null}
-                            onClick={() => handlePurchase(id)}
-                        >
-                          {purchasing === id ? (
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          ) : isExactCurrent ? (
-                              <Check className="mr-2 h-4 w-4" />
-                          ) : null}
-                          {buttonText}
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                )
-              })}
-            </div>
-          </div>
+          <ManageSubscriptionContent />
         </TabsContent>
         <TabsContent value="invoices" className="w-full space-y-8 max-w-6xl mx-auto">
           <Card>
