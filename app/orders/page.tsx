@@ -48,6 +48,7 @@ async function OrdersContent({ searchParams, networks, payment_gateways }: { sea
       pageCount = result.info?.pagination?.total_pages || 1
     }
   } catch (error) {
+    if (error instanceof Error && error.message.includes('Network error')) throw error
     console.error("Failed to fetch orders:", error)
   }
 

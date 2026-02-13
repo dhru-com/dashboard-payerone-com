@@ -163,6 +163,7 @@ export default async function OrderDetailsPage(props: { params: Promise<{ id: st
       order = result.data[0]
     }
   } catch (error) {
+    if (error instanceof Error && error.message.includes('Network error')) throw error
     console.error("Failed to fetch order details:", error)
   }
 

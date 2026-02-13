@@ -63,7 +63,7 @@ export const getLoginInitData = cache(async () => {
     return null;
   } catch (error) {
     if (isRedirectError(error)) throw error;
-    if (error instanceof Error && error.message.includes('Dynamic server usage')) {
+    if (error instanceof Error && (error.message.includes('Dynamic server usage') || error.message.includes('Network error'))) {
       throw error;
     }
     console.error("[getLoginInitData] Error fetching login init data:", error instanceof Error ? error.message : error);

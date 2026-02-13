@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { getLoginInitData } from "@/lib/auth-actions"
 import Link from "next/link"
 import { Zap, ArrowRight } from "lucide-react"
+import { ModeToggle } from "@/components/mode-toggle"
 
 export async function SiteHeader({ 
   title = "Payments",
@@ -49,6 +50,8 @@ export async function SiteHeader({
               Debug: {apiOverride.includes('localhost') ? 'Local API' : 'Custom API'}
             </Badge>
           )}
+
+          <ModeToggle />
         </div>
       </div>
     </header>

@@ -104,7 +104,15 @@ export async function apiFetch<T>(
     return data as T;
   } catch (error) {
     if (isRedirectError(error)) throw error;
-    console.error(`[apiFetch] Fetch failed for ${endpoint}:`, error instanceof Error ? error.message : error);
-    throw error;
+    
+    let errorMessage = error instanceof Error ? error.message : String(error);
+    
+    // Check if it's a fetch failure (network error)
+    if (errorMessage.toLowerCase().includes('fetch failed')) {
+      errorMessage = "Network error: Failed to connect to the API server. Please check your internet connection and try again.";
+    }
+
+    console.error(`[apiFetch] Fetch failed for ${endpoint}:`, errorMessage);
+    throw new Error(errorMessage);
   }
 }

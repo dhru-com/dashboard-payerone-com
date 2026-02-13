@@ -53,6 +53,7 @@ async function TransactionsContent({ searchParams, networks, payment_gateways }:
       pageCount = result.info?.pagination?.total_pages || 1
     }
   } catch (error) {
+    if (error instanceof Error && error.message.includes('Network error')) throw error
     console.error("Failed to fetch transactions:", error)
   }
 
