@@ -199,13 +199,13 @@ function CheckoutPreview({
               style={{ backgroundColor: brandColor }}
             >
               <div className="space-y-8">
-                <div className="h-10">
+                <div className="h-8">
                   {logoPreview ? (
                     <img src={logoPreview} alt="Company Logo" className="h-full object-contain" />
                   ) : (
                     <div className={cn("text-xl font-bold flex items-center gap-2", textColor)}>
-                      <div className="w-10 h-10 rounded bg-foreground/10 flex items-center justify-center border border-foreground/5">
-                        <Plus className="w-5 h-5" />
+                      <div className="w-8 h-8 rounded bg-foreground/10 flex items-center justify-center border border-foreground/5">
+                        <Plus className="w-4 h-4" />
                       </div>
                     </div>
                   )}
@@ -279,6 +279,141 @@ function CheckoutPreview({
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PaymentLinkPreview({
+  brandColor,
+  accentColor,
+  iconPreview,
+  viewMode,
+}: {
+  brandColor: string;
+  accentColor: string;
+  iconPreview: string | null;
+  viewMode: 'desktop' | 'mobile';
+}) {
+  const isMobile = viewMode === 'mobile';
+  const accentTextColor = getContrastColor(accentColor);
+
+  const previewContent = (
+    <div className={cn(
+      "flex flex-col items-center w-full max-w-sm mx-auto transition-transform duration-300",
+      isMobile ? "scale-[0.9] origin-top" : "scale-[0.8] origin-center"
+    )}>
+      {/* Card with Logo */}
+      <div className={cn(
+        "w-full bg-white rounded-[2rem] shadow-xl p-8 pt-12 relative border border-slate-100",
+        isMobile ? "mt-8" : "mt-10"
+      )}>
+        {/* Logo Overlap */}
+        <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-16 h-16 bg-black rounded-2xl flex items-center justify-center shadow-lg overflow-hidden border-4 border-white">
+          {iconPreview ? (
+            <img src={iconPreview} alt="Company Icon" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-black">
+              <Plus className="w-8 h-8 text-white opacity-20" />
+            </div>
+          )}
+        </div>
+
+        <div className="text-center space-y-4">
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Paying</p>
+            <h3 className="text-xl font-bold text-slate-900">Your Company</h3>
+            <div className="inline-block px-3 py-1 rounded-full bg-slate-50 border border-slate-100">
+              <p className="text-[10px] text-slate-400 font-medium">payerone.me/@your-company</p>
+            </div>
+          </div>
+
+          {/* Amount Box */}
+          <div className="bg-slate-50/50 rounded-[1.5rem] p-8 space-y-3 border border-slate-100/50 shadow-inner">
+            <div className="flex items-center justify-center gap-3">
+              <span className="text-2xl font-bold text-slate-300">$</span>
+              <span className="text-5xl font-black text-slate-900 tracking-tighter">100</span>
+            </div>
+            <div className="flex items-center gap-2 justify-center">
+              <div className="h-[1px] w-8 bg-slate-200" />
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">Amount in USD</p>
+              <div className="h-[1px] w-8 bg-slate-200" />
+            </div>
+          </div>
+
+          {/* Note Input */}
+          <div className="w-full p-4 rounded-xl bg-slate-50/50 border border-slate-100 text-sm text-slate-400 text-center font-medium">
+            What is this for?
+          </div>
+
+          {/* Pay Button */}
+          <button
+            className={cn(
+              "w-full py-5 rounded-2xl font-bold text-lg shadow-lg transition-all active:scale-[0.98]",
+              accentTextColor
+            )}
+            style={{ backgroundColor: accentColor }}
+          >
+            Pay $100
+          </button>
+
+          {/* Links */}
+          <div className="flex items-center justify-center gap-4 pt-2">
+            <button className="text-[9px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-0.5 hover:text-slate-600 transition-colors">Eula</button>
+            <button className="text-[9px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-0.5 hover:text-slate-600 transition-colors">Privacy</button>
+          </div>
+
+          {/* Powered By */}
+          <div className="flex items-center justify-center gap-1.5 pt-2 opacity-30">
+            <p className="text-[8px] font-bold uppercase tracking-widest">Powered by</p>
+            <div className="w-3.5 h-3.5 bg-black rounded-[4px] flex items-center justify-center">
+              <Plus className="w-2 h-2 text-white" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className={cn(
+      "relative transition-all duration-300 flex items-center justify-center py-8",
+      isMobile ? "w-full" : "w-full max-w-4xl"
+    )}>
+      {isMobile ? (
+        /* Mobile Frame */
+        <div className="relative w-[300px] h-[600px] bg-slate-100 rounded-[3rem] p-3 shadow-2xl border-[8px] border-slate-200/80">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-slate-300 rounded-full z-20" />
+          <div 
+            className="w-full h-full rounded-[2.2rem] overflow-hidden flex flex-col relative p-2 pt-6 transition-colors duration-300"
+            style={{ backgroundColor: brandColor }}
+          >
+            {previewContent}
+            <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-20 h-1 bg-foreground/10 rounded-full" />
+          </div>
+        </div>
+      ) : (
+        /* Desktop Frame */
+        <div 
+          className="rounded-xl shadow-2xl overflow-hidden flex transition-all duration-300 border-[8px] border-slate-200/80 shrink-0 flex-col w-full h-[500px]"
+          style={{ backgroundColor: brandColor }}
+        >
+          {/* Browser Header */}
+          <div className="h-10 bg-white border-b border-slate-100 flex items-center px-4 gap-4 shrink-0">
+            <div className="flex gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-red-400/80" />
+              <div className="w-2.5 h-2.5 rounded-full bg-amber-400/80" />
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-400/80" />
+            </div>
+            <div className="flex-1 max-w-md h-6 rounded bg-slate-100 flex items-center px-3">
+              <div className="w-1.5 h-1.5 rounded-full bg-slate-200 mr-2" />
+              <div className="h-1.5 w-32 rounded bg-slate-200/50" />
+            </div>
+          </div>
+          <div className="flex-1 overflow-auto p-8 flex items-center justify-center">
+            {previewContent}
           </div>
         </div>
       )}
@@ -854,6 +989,9 @@ export function BrandingTab() {
                   <TabsTrigger value="embedded" className="text-xs">
                     Embedded
                   </TabsTrigger>
+                  <TabsTrigger value="payment-link" className="text-xs">
+                    Payment Link
+                  </TabsTrigger>
                 </TabsList>
               </Tabs>
 
@@ -893,6 +1031,15 @@ export function BrandingTab() {
                     viewMode={viewMode}
                     onCopy={copyToClipboard}
                     isCopied={isCopied}
+                  />
+                </div>
+              ) : previewTab === 'payment-link' ? (
+                <div key="payment-link-preview" className="w-full h-full flex items-center justify-center p-4">
+                  <PaymentLinkPreview
+                    brandColor={brandColor}
+                    accentColor={accentColor}
+                    iconPreview={iconPreview}
+                    viewMode={viewMode}
                   />
                 </div>
               ) : (

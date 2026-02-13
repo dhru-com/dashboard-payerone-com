@@ -31,7 +31,7 @@ export function NavPayments({
       <SidebarMenu>
         {items.map((item) => (
           <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton asChild isActive={pathname === item.url} tooltip={item.name}>
+            <SidebarMenuButton asChild isActive={pathname.startsWith(item.url)} tooltip={item.name}>
               <Link href={item.url}>
                 <item.icon />
                 <span className="group-data-[collapsible=icon]:hidden">{item.name}</span>

@@ -32,6 +32,7 @@ export interface User {
   };
   subscription_v2?: SubscriptionV2;
   subscription_info?: string;
+  payment_handle?: string | null;
   payment_gateways?: Record<string, { type: string; display_name: string }>;
   [key: string]: unknown;
 }

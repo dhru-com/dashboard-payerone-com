@@ -146,3 +146,11 @@ export async function updateProfile(profileData: Partial<User>) {
   });
   return result;
 }
+
+export async function updatePaymentHandle(paymentHandle: string) {
+  const result = await apiFetch<ApiResponse<{ payment_handle: string }>>("payment_handle", {
+    method: "POST",
+    body: JSON.stringify({ payment_handle: paymentHandle }),
+  });
+  return result;
+}

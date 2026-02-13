@@ -19,6 +19,7 @@ import {
   WebhookIcon,
   FolderTree,
   ShieldCheck,
+  LinkIcon,
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -96,6 +97,11 @@ const data = {
       name: "Payment Gateways",
       url: "/payments/payment-gateways-v2",
       icon: CreditCard,
+    },
+    {
+      name: "PayerOne.me Link",
+      url: "/payments/payerone-me-link/introduction",
+      icon: LinkIcon,
     },
   ],
   developer: [
