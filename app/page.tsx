@@ -36,7 +36,8 @@ export default async function Page() {
     branding: userProfile.branding as { icon?: string },
     subscription: userProfile.subscription_v2?.package,
     subscription_info: userProfile.subscription_info,
-    wallet_balance: userProfile.subscription_v2?.wallet_balance
+    wallet_balance: userProfile.subscription_v2?.wallet_balance,
+    payment_handle: userProfile.payment_handle
   } : undefined;
 
   const networks = loginInit?.static?.networks || {};

@@ -52,6 +52,7 @@ const data = {
     avatar: "/avatars/shadcn.jpg",
     subscription: "FREE",
     wallet_balance: 0,
+    payment_handle: null,
   },
   navMain: [
     {
@@ -134,6 +135,7 @@ export function AppSidebar({ user, ...props }: React.ComponentProps<typeof Sideb
     subscription?: string
     subscription_info?: string
     wallet_balance?: number
+    payment_handle?: string | null
   }
 }) {
   const sidebarUser = user || data.user
@@ -142,6 +144,20 @@ export function AppSidebar({ user, ...props }: React.ComponentProps<typeof Sideb
   const isCollapsed = state === "collapsed"
   const isFreePlan = sidebarUser.subscription === "FREE"
   const isDashboard = pathname === "/"
+
+  const paymentsItems = React.useMemo(() => {
+    return data.payments.map(item => {
+      if (item.name === "PayerOne.me Link") {
+        return {
+          ...item,
+          url: sidebarUser.payment_handle 
+            ? "/payments/payerone-me-link" 
+            : "/payments/payerone-me-link/introduction"
+        }
+      }
+      return item
+    })
+  }, [sidebarUser.payment_handle])
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -170,7 +186,7 @@ export function AppSidebar({ user, ...props }: React.ComponentProps<typeof Sideb
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavPayments items={data.payments} />
+        <NavPayments items={paymentsItems} />
         <NavDeveloper items={data.developer} />
 
         {process.env.NODE_ENV !== "production" && <NavDevelopment />}

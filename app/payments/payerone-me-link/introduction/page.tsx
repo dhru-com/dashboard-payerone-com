@@ -10,12 +10,17 @@ import { getLoginInitData } from "@/lib/auth-actions"
 import { Button } from "@/components/ui/button"
 import { LinkIcon, CheckCircle2, Globe, Shield } from "lucide-react"
 import Link from "next/link"
+import { redirect } from "next/navigation"
 
 export const dynamic = "force-dynamic";
 
 export default async function PayerOneMeIntroductionPage() {
   const loginInit = await getLoginInitData();
   const userProfile = loginInit?.profile;
+
+  if (userProfile?.payment_handle) {
+    redirect("/payments/payerone-me-link");
+  }
 
   const cookieStore = await cookies()
   const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false"
@@ -27,7 +32,8 @@ export default async function PayerOneMeIntroductionPage() {
     branding: userProfile.branding as { icon?: string },
     subscription: userProfile.subscription_v2?.package,
     subscription_info: userProfile.subscription_info,
-    wallet_balance: userProfile.subscription_v2?.wallet_balance
+    wallet_balance: userProfile.subscription_v2?.wallet_balance,
+    payment_handle: userProfile.payment_handle
   } : undefined;
 
   return (
