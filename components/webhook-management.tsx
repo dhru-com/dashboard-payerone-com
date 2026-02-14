@@ -2,15 +2,18 @@
 
 import * as React from "react"
 import { 
+  File, 
   Plus, 
   MoreHorizontal, 
   Play, 
   Trash2, 
   Edit2, 
   Globe,
-  Loader2
+  Loader2,
+  BookOpen
 } from "lucide-react"
 import { toast } from "sonner"
+import Link from "next/link"
 
 import { 
   Card, 
@@ -166,12 +169,20 @@ export function WebhookManagement({ initialWebhooks }: WebhookManagementProps) {
               Configure endpoints to receive real-time notifications about events.
             </CardDescription>
           </div>
-          {webhooks.length > 0 && (
-            <Button onClick={() => { setUrl(""); setIsCreateDialogOpen(true); }}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Webhook
+          <div className="flex items-center gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/developer/webhooks/docs">
+                <BookOpen className="mr-2 h-4 w-4" />
+                Documentation
+              </Link>
             </Button>
-          )}
+            {webhooks.length > 0 && (
+              <Button onClick={() => { setUrl(""); setIsCreateDialogOpen(true); }}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Webhook
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {webhooks.length === 0 ? (
@@ -185,10 +196,16 @@ export function WebhookManagement({ initialWebhooks }: WebhookManagementProps) {
                   Add your first webhook endpoint to start receiving real-time notifications about events in your account.
                 </EmptyDescription>
               </EmptyHeader>
-              <EmptyContent>
+              <EmptyContent className="flex flex-col gap-2">
                 <Button onClick={() => { setUrl(""); setIsCreateDialogOpen(true); }}>
                   <Plus className="mr-2 h-4 w-4" />
                   Add Webhook
+                </Button>
+                <Button variant="ghost" className="text-muted-foreground" asChild>
+                  <Link href="/developer/webhooks/docs">
+                    <BookOpen className="mr-2 h-4 w-4" />
+                    Read Documentation
+                  </Link>
                 </Button>
               </EmptyContent>
             </Empty>
