@@ -13,15 +13,16 @@ import { getLoginInitData } from "@/lib/auth-actions"
 import { DataTableSkeleton } from "@/components/skeletons/data-table-skeleton"
 import { OrdersDataTable, Order } from "@/components/orders-data-table"
 
-async function OrdersContent({ searchParams, networks, payment_gateways }: { searchParams: { [key: string]: string | string[] | undefined }, networks?: Record<string, { name: string }>, payment_gateways?: Record<string, { type: string; display_name: string }> }) {
+async function OrdersContent({ searchParams, networks, payment_gateways, payment_handle }: { searchParams: { [key: string]: string | string[] | undefined }, networks?: Record<string, { name: string }>, payment_gateways?: Record<string, { type: string; display_name: string }>, payment_handle?: string | null }) {
   let orders: Order[] = []
   let pageCount = 0
 
   const page = typeof searchParams.page === 'string' ? searchParams.page : '1'
   const limit = typeof searchParams.limit === 'string' ? searchParams.limit : '10'
   const status = typeof searchParams.status === 'string' ? searchParams.status : 'all'
+  const payment_status = typeof searchParams.payment_status === 'string' ? searchParams.payment_status : 'all'
   const network = typeof searchParams.network === 'string' ? searchParams.network : 'all'
-  const custom_id = typeof searchParams.custom_id === 'string' ? searchParams.custom_id : ''
+  const search = typeof searchParams.search === 'string' ? searchParams.search : ''
 
   try {
     const query = new URLSearchParams({
@@ -33,12 +34,16 @@ async function OrdersContent({ searchParams, networks, payment_gateways }: { sea
       query.append('status', status)
     }
 
+    if (payment_status !== 'all') {
+      query.append('payment_status', payment_status)
+    }
+
     if (network !== 'all') {
       query.append('network', network)
     }
 
-    if (custom_id) {
-      query.append('custom_id', custom_id)
+    if (search) {
+      query.append('search', search)
     }
 
     const result = await apiFetch<ApiResponse<Order[]>>(`orders?${query.toString()}`)
@@ -58,6 +63,7 @@ async function OrdersContent({ searchParams, networks, payment_gateways }: { sea
       pageCount={pageCount}
       networks={networks || {}}
       payment_gateways={payment_gateways || {}}
+      payment_handle={payment_handle}
     />
   )
 }
@@ -70,6 +76,7 @@ export default async function OrdersPage(props: { searchParams: Promise<{ [key: 
   const userProfile = loginInit?.profile;
   const networks = loginInit?.static?.networks || {};
   const payment_gateways = userProfile?.payment_gateways || {};
+  const payment_handle = userProfile?.payment_handle;
 
   const cookieStore = await cookies()
   const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false"
@@ -104,6 +111,7 @@ export default async function OrdersPage(props: { searchParams: Promise<{ [key: 
                 searchParams={searchParams}
                 networks={networks as Record<string, { name: string }>}
                 payment_gateways={payment_gateways as Record<string, { type: string; display_name: string }>}
+                payment_handle={payment_handle}
               />
             </Suspense>
           </div>

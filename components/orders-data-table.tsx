@@ -22,12 +22,14 @@ import {
   ChevronsRight,
   Settings2,
   Search,
+  X,
   Wallet,
   ExternalLink,
   Zap,
   AlertCircle,
   Copy,
   Check,
+  RefreshCw,
 } from "lucide-react"
 
 import {
@@ -83,6 +85,7 @@ declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
     networks?: Record<string, { name: string; blockchain_url?: string }>
     payment_gateways?: Record<string, { type: string; display_name: string }>
+    payment_handle?: string | null
   }
 }
 
@@ -104,6 +107,7 @@ export interface Order {
   customer_email: string
   website: string
   note?: string
+  payment_status: string
 }
 
 const OrderIDCell = ({ orderId }: { orderId: string }) => {
@@ -172,7 +176,10 @@ const columns: ColumnDef<Order>[] = [
   },
   {
     accessorKey: "custom_id",
-    header: "Custom ID",
+    header: ({ table }) => {
+      const paymentHandle = table.options.meta?.payment_handle
+      return paymentHandle === "payment_handle" ? "Payerone.me Link" : "Custom ID"
+    },
   },
   {
     accessorKey: "website",
@@ -211,7 +218,7 @@ const columns: ColumnDef<Order>[] = [
           break
         case "Pending":
         case "Partially-Paid":
-          variant = "outline"
+          variant = "secondary"
           break
         case "New":
           variant = "secondary"
@@ -221,6 +228,32 @@ const columns: ColumnDef<Order>[] = [
       return (
         <Badge variant={variant}>
           {status}
+        </Badge>
+      )
+    },
+  },
+  {
+    accessorKey: "payment_status",
+    header: "Payment Status",
+    cell: ({ row }) => {
+      const status = row.getValue("payment_status") as string
+      let variant: "default" | "secondary" | "destructive" | "outline" = "secondary"
+
+      switch (status) {
+        case "Paid":
+          variant = "default"
+          break
+        case "UnPaid":
+          variant = "destructive"
+          break
+        case "Partially Paid":
+          variant = "secondary"
+          break
+      }
+
+      return (
+        <Badge variant={variant}>
+          {status || "N/A"}
         </Badge>
       )
     },
@@ -419,6 +452,7 @@ interface OrdersDataTableProps {
   pageCount: number
   networks?: Record<string, { name: string }>
   payment_gateways?: Record<string, { type: string; display_name: string }>
+  payment_handle?: string | null
   showFilters?: boolean
   showPagination?: boolean
   viewAllHref?: string
@@ -429,6 +463,7 @@ export function OrdersDataTable({
   pageCount,
   networks = {},
   payment_gateways = {},
+  payment_handle = null,
   showFilters = true,
   showPagination = true,
   viewAllHref
@@ -440,14 +475,16 @@ export function OrdersDataTable({
   const page = parseInt(searchParams.get("page") || "1")
   const limit = parseInt(searchParams.get("limit") || "10")
   const status = searchParams.get("status") || ""
+  const payment_status = searchParams.get("payment_status") || ""
   const network = searchParams.get("network") || ""
-  const customId = searchParams.get("custom_id") || ""
+  const search = searchParams.get("search") || ""
 
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([
     { id: "status", value: status },
+    { id: "payment_status", value: payment_status },
     { id: "network", value: network },
-    { id: "custom_id", value: customId },
+    { id: "search", value: search },
   ])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
     custom_id: false,
@@ -485,7 +522,8 @@ export function OrdersDataTable({
     getSortedRowModel: getSortedRowModel(),
     meta: {
       networks,
-      payment_gateways
+      payment_gateways,
+      payment_handle
     }
   })
 
@@ -520,117 +558,167 @@ export function OrdersDataTable({
     updateQueryParams({ [id]: value, page: 1 })
   }
 
-  const [customIdValue, setCustomIdValue] = React.useState(customId)
+  const [searchValue, setSearchValue] = React.useState(search)
 
   React.useEffect(() => {
-    setCustomIdValue(customId)
-  }, [customId])
+    setSearchValue(search)
+  }, [search])
 
   React.useEffect(() => {
     const timeout = setTimeout(() => {
-      if (customIdValue !== customId) {
-        handleFilterChange("custom_id", customIdValue)
+      if (searchValue !== search) {
+        handleFilterChange("search", searchValue)
       }
     }, 500)
     return () => clearTimeout(timeout)
-  }, [customIdValue])
+  }, [searchValue])
+
+  const handleRefresh = () => {
+    startTransition(() => {
+      router.refresh()
+    })
+  }
 
   return (
     <div className={`w-full space-y-4 ${isPending ? 'opacity-50' : ''}`}>
       {(showFilters || viewAllHref) && (
-        <div className="flex items-center justify-between gap-4 overflow-x-auto pb-2 scrollbar-none">
-          {showFilters ? (
-            <div className="flex flex-1 items-center gap-2">
-              <Select
-                value={(table.getColumn("status")?.getFilterValue() as string) ?? "all"}
-                onValueChange={(value) =>
-                  handleFilterChange("status", value)
-                }
-              >
-                <SelectTrigger className="w-[150px] shrink-0">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="Paid">Paid</SelectItem>
-                  <SelectItem value="Cancel">Cancel</SelectItem>
-                  <SelectItem value="Partially-Paid">Partially Paid</SelectItem>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="New">New</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select
-                value={(table.getColumn("network")?.getFilterValue() as string) ?? "all"}
-                onValueChange={(value) =>
-                  handleFilterChange("network", value)
-                }
-              >
-                <SelectTrigger className="w-[150px] shrink-0">
-                  <SelectValue placeholder="Network" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Networks</SelectItem>
-                  {Object.entries(networks).map(([id, network]) => (
-                    <SelectItem key={id} value={id}>
-                      {network.name}
-                    </SelectItem>
-                  ))}
-                  {Object.keys(payment_gateways).length > 0 && Object.keys(networks).length > 0 && (
-                    <div className="h-px bg-muted my-1" />
-                  )}
-                  {Object.entries(payment_gateways).map(([id, gateway]) => (
-                    <SelectItem key={id} value={id}>
-                      {gateway.display_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="relative w-[130px] shrink-0">
-                <Input
-                  placeholder="Custom ID..."
-                  value={customIdValue}
-                  onChange={(event) =>
-                    setCustomIdValue(event.target.value)
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {showFilters && (
+              <>
+                <Select
+                  value={(table.getColumn("status")?.getFilterValue() as string) ?? "all"}
+                  onValueChange={(value) =>
+                    handleFilterChange("status", value)
                   }
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="flex-1" />
-          )}
-          {viewAllHref ? (
-            <Button variant="outline" asChild className="shrink-0">
-              <Link href={viewAllHref}>
-                View All
-              </Link>
-            </Button>
-          ) : (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="ml-auto shrink-0">
-                  <Settings2 className="mr-2 h-4 w-4" />
-                  Columns
+                >
+                  <SelectTrigger className="w-[140px] md:w-[150px] shrink-0">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="New">New</SelectItem>
+                    <SelectItem value="Pending">Pending</SelectItem>
+                    <SelectItem value="Cancel">Cancel</SelectItem>
+                    <SelectItem value="Paid">Paid</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={(table.getColumn("payment_status")?.getFilterValue() as string) ?? "all"}
+                  onValueChange={(value) =>
+                    handleFilterChange("payment_status", value)
+                  }
+                >
+                  <SelectTrigger className="w-[140px] md:w-[150px] shrink-0">
+                    <SelectValue placeholder="Payment Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Payment Statuses</SelectItem>
+                    <SelectItem value="Paid">Paid</SelectItem>
+                    <SelectItem value="UnPaid">UnPaid</SelectItem>
+                    <SelectItem value="Partially Paid">Partially Paid</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={(table.getColumn("network")?.getFilterValue() as string) ?? "all"}
+                  onValueChange={(value) =>
+                    handleFilterChange("network", value)
+                  }
+                >
+                  <SelectTrigger className="w-[140px] md:w-[150px] shrink-0">
+                    <SelectValue placeholder="Network" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Networks</SelectItem>
+                    {Object.entries(networks).map(([id, network]) => (
+                      <SelectItem key={id} value={id}>
+                        {network.name}
+                      </SelectItem>
+                    ))}
+                    {Object.keys(payment_gateways).length > 0 && Object.keys(networks).length > 0 && (
+                      <div className="h-px bg-muted my-1" />
+                    )}
+                    {Object.entries(payment_gateways).map(([id, gateway]) => (
+                      <SelectItem key={id} value={id}>
+                        {gateway.display_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {showFilters && (
+              <>
+                <div className="relative flex-1 md:w-[250px] md:flex-none">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search..."
+                    value={searchValue}
+                    onChange={(event) =>
+                      setSearchValue(event.target.value)
+                    }
+                    className="pl-9 pr-9"
+                  />
+                  {searchValue && (
+                    <button
+                      onClick={() => setSearchValue("")}
+                      className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
+                      title="Clear search"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleRefresh}
+                  disabled={isPending}
+                  title="Refresh"
+                  className="shrink-0"
+                >
+                  <RefreshCw className={cn("h-4 w-4", isPending && "animate-spin")} />
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {table
-                  .getAllColumns()
-                  .filter((column) => column.getCanHide())
-                  .map((column) => {
-                    return (
-                      <DropdownMenuCheckboxItem
-                        key={column.id}
-                        className="capitalize"
-                        checked={column.getIsVisible()}
-                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                      >
-                        {column.id.replace(/_/g, " ")}
-                      </DropdownMenuCheckboxItem>
-                    )
-                  })}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+              </>
+            )}
+            <div className="flex items-center gap-2">
+              {viewAllHref ? (
+                <Button variant="outline" asChild className="shrink-0">
+                  <Link href={viewAllHref}>
+                    View All
+                  </Link>
+                </Button>
+              ) : (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon" className="shrink-0" title="Columns">
+                      <Settings2 className="h-4 w-4" />
+                      <span className="sr-only">Toggle columns</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {table
+                      .getAllColumns()
+                      .filter((column) => column.getCanHide())
+                      .map((column) => {
+                        return (
+                          <DropdownMenuCheckboxItem
+                            key={column.id}
+                            className="capitalize"
+                            checked={column.getIsVisible()}
+                            onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                          >
+                            {column.id.replace(/_/g, " ")}
+                          </DropdownMenuCheckboxItem>
+                        )
+                      })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          </div>
         </div>
       )}
       <div className="rounded-md border overflow-hidden">

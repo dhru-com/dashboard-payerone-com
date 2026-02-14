@@ -26,6 +26,9 @@ import {
   AlertCircle,
   Copy,
   Check,
+  Search,
+  X,
+  RefreshCw,
 } from "lucide-react"
 
 import {
@@ -185,7 +188,7 @@ const columns: ColumnDef<Transaction>[] = [
       let logoPath = ""
       let type = ""
 
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(networkId)
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(networkId) || (networkId && networkId.length > 20)
 
       if (isUuid && paymentGateways[networkId]) {
         networkName = paymentGateways[networkId].display_name
@@ -378,10 +381,10 @@ interface TransactionsDataTableProps {
   viewAllHref?: string
 }
 
-export function TransactionsDataTable({ 
-  data = [], 
-  pageCount, 
-  networks = {}, 
+export function TransactionsDataTable({
+  data = [],
+  pageCount,
+  networks = {},
   payment_gateways = {},
   showFilters = true,
   showPagination = true,
@@ -407,6 +410,25 @@ export function TransactionsDataTable({
   ])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
+
+  const [isPending, startTransition] = React.useTransition()
+
+  const updateQueryParams = React.useCallback(
+    (params: Record<string, string | number | null>) => {
+      const newSearchParams = new URLSearchParams(searchParams.toString())
+      Object.entries(params).forEach(([key, value]) => {
+        if (value === null || value === "" || value === "all") {
+          newSearchParams.delete(key)
+        } else {
+          newSearchParams.set(key, String(value))
+        }
+      })
+      startTransition(() => {
+        router.push(`${pathname}?${newSearchParams.toString()}`)
+      })
+    },
+    [router, pathname, searchParams]
+  )
 
   const table = useReactTable({
     data: data || [],
@@ -436,25 +458,6 @@ export function TransactionsDataTable({
     }
   })
 
-  const [isPending, startTransition] = React.useTransition()
-
-  const updateQueryParams = React.useCallback(
-    (params: Record<string, string | number | null>) => {
-      const newSearchParams = new URLSearchParams(searchParams.toString())
-      Object.entries(params).forEach(([key, value]) => {
-        if (value === null || value === "" || value === "all") {
-          newSearchParams.delete(key)
-        } else {
-          newSearchParams.set(key, String(value))
-        }
-      })
-      startTransition(() => {
-        router.push(`${pathname}?${newSearchParams.toString()}`)
-      })
-    },
-    [router, pathname, searchParams]
-  )
-
   const handlePageChange = (pageIndex: number) => {
     updateQueryParams({ page: pageIndex + 1 })
   }
@@ -465,6 +468,12 @@ export function TransactionsDataTable({
 
   const handleFilterChange = (id: string, value: string) => {
     updateQueryParams({ [id]: value, page: 1 })
+  }
+
+  const handleRefresh = () => {
+    startTransition(() => {
+      router.refresh()
+    })
   }
 
   const [merchantClientEmailValue, setMerchantClientEmailValue] = React.useState(merchantClientEmail)
@@ -499,107 +508,147 @@ export function TransactionsDataTable({
   return (
     <div className={`w-full space-y-4 ${isPending ? 'opacity-50' : ''}`}>
       {(showFilters || viewAllHref) && (
-        <div className="flex items-center justify-between gap-4 overflow-x-auto pb-2 scrollbar-none">
-          {showFilters ? (
-            <div className="flex flex-1 items-center gap-2">
-              <Select
-                value={(table.getColumn("status")?.getFilterValue() as string) ?? "all"}
-                onValueChange={(value) =>
-                  handleFilterChange("status", value)
-                }
-              >
-                <SelectTrigger className="w-[150px] shrink-0">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="Verified">Verified</SelectItem>
-                  <SelectItem value="Verifying">Verifying</SelectItem>
-                  <SelectItem value="Canceled">Canceled</SelectItem>
-                  <SelectItem value="Failed">Failed</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select
-                value={(table.getColumn("network")?.getFilterValue() as string) ?? "all"}
-                onValueChange={(value) =>
-                  handleFilterChange("network", value)
-                }
-              >
-                <SelectTrigger className="w-[150px] shrink-0">
-                  <SelectValue placeholder="Network" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Networks</SelectItem>
-                  {Object.entries(networks).map(([id, network]) => (
-                    <SelectItem key={id} value={id}>
-                      {network.name}
-                    </SelectItem>
-                  ))}
-                  {Object.keys(payment_gateways).length > 0 && Object.keys(networks).length > 0 && (
-                    <div className="h-px bg-muted my-1" />
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {showFilters && (
+              <>
+                <Select
+                  value={(table.getColumn("status")?.getFilterValue() as string) ?? "all"}
+                  onValueChange={(value) =>
+                    handleFilterChange("status", value)
+                  }
+                >
+                  <SelectTrigger className="w-[140px] md:w-[150px] shrink-0">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="Verified">Verified</SelectItem>
+                    <SelectItem value="Verifying">Verifying</SelectItem>
+                    <SelectItem value="Canceled">Canceled</SelectItem>
+                    <SelectItem value="Failed">Failed</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={(table.getColumn("network")?.getFilterValue() as string) ?? "all"}
+                  onValueChange={(value) =>
+                    handleFilterChange("network", value)
+                  }
+                >
+                  <SelectTrigger className="w-[140px] md:w-[150px] shrink-0">
+                    <SelectValue placeholder="Network" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Networks</SelectItem>
+                    {Object.entries(networks).map(([id, network]) => (
+                      <SelectItem key={id} value={id}>
+                        {network.name}
+                      </SelectItem>
+                    ))}
+                    {Object.keys(payment_gateways).length > 0 && Object.keys(networks).length > 0 && (
+                      <div className="h-px bg-muted my-1" />
+                    )}
+                    {Object.entries(payment_gateways).map(([id, gateway]) => (
+                      <SelectItem key={id} value={id}>
+                        {gateway.display_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {showFilters && (
+              <>
+                <div className="relative flex-1 md:w-[200px] md:flex-none">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Merchant Email..."
+                    value={merchantClientEmailValue}
+                    onChange={(event) =>
+                      setMerchantClientEmailValue(event.target.value)
+                    }
+                    className="pl-9 pr-9"
+                  />
+                  {merchantClientEmailValue && (
+                    <button
+                      onClick={() => setMerchantClientEmailValue("")}
+                      className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
+                      title="Clear email"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
                   )}
-                  {Object.entries(payment_gateways).map(([id, gateway]) => (
-                    <SelectItem key={id} value={id}>
-                      {gateway.display_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="relative w-[100px] shrink-0">
-                <Input
-                  placeholder="Merchant Email..."
-                  value={merchantClientEmailValue}
-                  onChange={(event) =>
-                    setMerchantClientEmailValue(event.target.value)
-                  }
-                />
-              </div>
-              <div className="relative w-[100px] shrink-0">
-                <Input
-                  placeholder="TXID..."
-                  value={networkTransactionIdValue}
-                  onChange={(event) =>
-                    setNetworkTransactionIdValue(event.target.value)
-                  }
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="flex-1" />
-          )}
-          {viewAllHref ? (
-            <Button variant="outline" asChild className="shrink-0">
-              <Link href={viewAllHref}>
-                View All
-              </Link>
-            </Button>
-          ) : (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="ml-auto shrink-0">
-                  <Settings2 className="mr-2 h-4 w-4" />
-                  Columns
+                </div>
+                <div className="relative flex-1 md:w-[200px] md:flex-none">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="TXID..."
+                    value={networkTransactionIdValue}
+                    onChange={(event) =>
+                      setNetworkTransactionIdValue(event.target.value)
+                    }
+                    className="pl-9 pr-9"
+                  />
+                  {networkTransactionIdValue && (
+                    <button
+                      onClick={() => setNetworkTransactionIdValue("")}
+                      className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
+                      title="Clear TXID"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleRefresh}
+                  disabled={isPending}
+                  title="Refresh"
+                  className="shrink-0"
+                >
+                  <RefreshCw className={cn("h-4 w-4", isPending && "animate-spin")} />
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {table
-                  .getAllColumns()
-                  .filter((column) => column.getCanHide())
-                  .map((column) => {
-                    return (
-                      <DropdownMenuCheckboxItem
-                        key={column.id}
-                        className="capitalize"
-                        checked={column.getIsVisible()}
-                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                      >
-                        {column.id.replace(/_/g, " ")}
-                      </DropdownMenuCheckboxItem>
-                    )
-                  })}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+              </>
+            )}
+            <div className="flex items-center gap-2">
+              {viewAllHref ? (
+                <Button variant="outline" asChild className="shrink-0">
+                  <Link href={viewAllHref}>
+                    View All
+                  </Link>
+                </Button>
+              ) : (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon" className="shrink-0" title="Columns">
+                      <Settings2 className="h-4 w-4" />
+                      <span className="sr-only">Toggle columns</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {table
+                      .getAllColumns()
+                      .filter((column) => column.getCanHide())
+                      .map((column) => {
+                        return (
+                          <DropdownMenuCheckboxItem
+                            key={column.id}
+                            className="capitalize"
+                            checked={column.getIsVisible()}
+                            onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                          >
+                            {column.id.replace(/_/g, " ")}
+                          </DropdownMenuCheckboxItem>
+                        )
+                      })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          </div>
         </div>
       )}
       <div className="rounded-md border overflow-hidden">

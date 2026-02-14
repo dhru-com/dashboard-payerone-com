@@ -66,6 +66,7 @@ interface OrderDetails {
   customer_email: string
   website?: string
   note?: string
+  payment_status: string
   ipn_log?: IPNLog[]
   transactions?: Transaction[]
   items?: OrderItem[]
@@ -118,8 +119,9 @@ function StatusBadge({ status }: { status: string }) {
       break
     case "Pending":
     case "Partially-Paid":
+    case "Partially Paid":
     case "Verifying":
-      variant = "outline"
+      variant = "secondary"
       break
     default:
       variant = "secondary"
@@ -234,8 +236,11 @@ export default async function OrderDetailsPage(props: { params: Promise<{ id: st
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <div className="space-y-1">
                     <CardTitle className="text-xl flex items-center gap-2">
-                      Order {order.custom_id ? `#${order.custom_id}` : ""}
+                      {order.custom_id === "payment_handle" ? "Payerone.me Link" : `Order ${order.custom_id ? `#${order.custom_id}` : ""}`}
                       <StatusBadge status={order.status} />
+                      {order.status !== order.payment_status && (
+                        <StatusBadge status={order.payment_status} />
+                      )}
                     </CardTitle>
                     <CardDescription className="flex items-center gap-1">
                       PayerOne Order ID: <span className="font-mono text-xs">{order.display_order_id}</span>
