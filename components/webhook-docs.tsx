@@ -141,10 +141,10 @@ export function WebhookDocs() {
   return (
     <div className="space-y-8">
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="lg:col-span-3 space-y-10">
           <section id="getting-started" className="space-y-4 scroll-mt-20">
-            <h2 className="text-xl font-bold tracking-tight">Getting Started</h2>
+            <h2 className="text-xl font-bold tracking-tight">1. Getting Started</h2>
             <Card>
               <CardContent className="pt-6 space-y-6">
                 <div className="flex gap-4">
@@ -181,7 +181,7 @@ export function WebhookDocs() {
           <section id="signature-verification" className="space-y-4 scroll-mt-20">
             <div className="flex items-center gap-2">
               <Lock className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-bold tracking-tight">Signature Verification</h2>
+              <h2 className="text-xl font-bold tracking-tight">2. Signature Verification</h2>
             </div>
             <Card>
               <CardHeader>
@@ -238,7 +238,7 @@ export function WebhookDocs() {
           </section>
 
           <section id="event-types" className="space-y-4 scroll-mt-20">
-            <h2 className="text-xl font-bold tracking-tight">Event Types</h2>
+            <h2 className="text-xl font-bold tracking-tight">3. Event Types</h2>
             <Card>
               <CardContent className="p-0">
                 <Table>
@@ -266,7 +266,7 @@ export function WebhookDocs() {
           <section id="retry-policy" className="space-y-4 scroll-mt-20">
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-bold tracking-tight">Retry Policy</h2>
+              <h2 className="text-xl font-bold tracking-tight">4. Retry Policy</h2>
             </div>
             <Card>
               <CardContent className="pt-6 space-y-4">
@@ -296,7 +296,7 @@ export function WebhookDocs() {
           <section id="handling-responses" className="space-y-4 scroll-mt-20">
             <div className="flex items-center gap-2">
               <Info className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-bold tracking-tight">Handling Responses</h2>
+              <h2 className="text-xl font-bold tracking-tight">5. Handling Responses</h2>
             </div>
             <Card>
               <CardContent className="p-0">
@@ -323,7 +323,7 @@ export function WebhookDocs() {
           </section>
 
           <section id="sample-payload" className="space-y-4 scroll-mt-20">
-            <h2 className="text-xl font-bold tracking-tight">Sample Payload</h2>
+            <h2 className="text-xl font-bold tracking-tight">6. Sample Payload</h2>
             <Card>
               <CardHeader className="pb-0">
                 <CardDescription>All webhook requests send a POST request with a JSON body.</CardDescription>
@@ -355,12 +355,12 @@ export function WebhookDocs() {
             <CardContent>
               <nav className="flex flex-col gap-2">
                 {[
-                  { id: "getting-started", label: "Getting Started" },
-                  { id: "signature-verification", label: "Signature Verification" },
-                  { id: "event-types", label: "Event Types" },
-                  { id: "retry-policy", label: "Retry Policy" },
-                  { id: "handling-responses", label: "Handling Responses" },
-                  { id: "sample-payload", label: "Sample Payload" },
+                  { id: "getting-started", label: "1. Getting Started" },
+                  { id: "signature-verification", label: "2. Signature Verification" },
+                  { id: "event-types", label: "3. Event Types" },
+                  { id: "retry-policy", label: "4. Retry Policy" },
+                  { id: "handling-responses", label: "5. Handling Responses" },
+                  { id: "sample-payload", label: "6. Sample Payload" },
                 ].map((item) => (
                   <a
                     key={item.id}

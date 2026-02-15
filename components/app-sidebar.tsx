@@ -118,7 +118,7 @@ const data = {
     },
     {
       title: "Documentation",
-      url: "https://payerone.readme.io/",
+      url: "/developer/docs",
       icon: BookOpenIcon,
     },
   ],

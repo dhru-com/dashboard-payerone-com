@@ -1,8 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { Copy, Eye, EyeOff, Loader2 } from "lucide-react"
+import { Copy, Eye, EyeOff, Loader2, BookOpen } from "lucide-react"
 import { toast } from "sonner"
+import Link from "next/link"
 
 import {
   Card,
@@ -65,12 +66,20 @@ export function MerchantApiAccess() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>API Keys</CardTitle>
-        <CardDescription>
-          Use these keys to authenticate your integration with PayerOne.
-          Keep your private keys secure and never share them.
-        </CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <div className="space-y-1">
+          <CardTitle>API Keys</CardTitle>
+          <CardDescription>
+            Use these keys to authenticate your integration with PayerOne.
+            Keep your private keys secure and never share them.
+          </CardDescription>
+        </div>
+        <Button variant="outline" asChild>
+          <Link href="/developer/docs">
+            <BookOpen className="mr-2 h-4 w-4" />
+            Documentation
+          </Link>
+        </Button>
       </CardHeader>
       <CardContent className="space-y-6">
         <Tabs value={mode} onValueChange={handleModeChange} className="w-full">
