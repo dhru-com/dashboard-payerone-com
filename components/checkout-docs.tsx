@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useSearchParams, useRouter, usePathname } from "next/navigation"
 import {
   Card,
   CardContent,
@@ -417,7 +418,17 @@ const WEBHOOK_SAMPLE = `{
 }`
 
 export function CheckoutDocs({ apiToken }: { apiToken?: string }) {
-  const [activeTab, setActiveTab] = React.useState("docs")
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+  const activeTab = searchParams.get("tab") || "docs"
+
+  const handleTabChange = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set("tab", value)
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
+  }
+
   const [simType, setSimType] = React.useState<"standard" | "express" | "order-details">("standard")
   const [simUrl, setSimUrl] = React.useState("https://api.payerone.com/checkout/v1/orders_v2")
   const [simMethod, setSimMethod] = React.useState("POST")
@@ -601,7 +612,7 @@ export function CheckoutDocs({ apiToken }: { apiToken?: string }) {
           <h1 className="text-2xl font-bold tracking-tight">Checkout Integration</h1>
           <p className="text-sm text-muted-foreground">Comprehensive documentation for PayerOne Checkout API.</p>
         </div>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-auto">
           <TabsList>
             <TabsTrigger value="docs" className="gap-2">
               <Code2 className="h-4 w-4" />
