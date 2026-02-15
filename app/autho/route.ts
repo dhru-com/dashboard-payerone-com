@@ -30,11 +30,16 @@ export async function GET(request: NextRequest) {
   const proto = request.headers.get("x-forwarded-proto") || (request.nextUrl.protocol === "https:" ? "https" : "http");
   const isSecure = proto.split(',')[0].trim() === "https";
 
+  const host = request.headers.get("host") || "";
+  const isPayerOneDomain = host.endsWith(".payerone.com") || host === "payerone.com";
+  const cookieDomain = isPayerOneDomain ? ".payerone.com" : undefined;
+
   const cookieOptions = {
     httpOnly: true,
     secure: isSecure,
     sameSite: "lax" as const,
     path: "/",
+    domain: cookieDomain,
     maxAge: 30 * 24 * 60 * 60, // 30 days
   };
 

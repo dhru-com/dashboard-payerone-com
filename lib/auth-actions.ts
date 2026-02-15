@@ -1,6 +1,6 @@
 "use server"
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { AUTH_CONFIG } from "@/lib/auth-config";
 import { redirect } from "next/navigation";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
@@ -10,17 +10,40 @@ import { cache } from "react";
 
 export async function logout() {
   const cookieStore = await cookies();
-  cookieStore.delete(AUTH_CONFIG.storageTokenKeyName);
+  const headerStore = await headers();
+  const host = headerStore.get("host") || "";
+  const isPayerOneDomain = host.endsWith(".payerone.com") || host === "payerone.com";
+  const cookieDomain = isPayerOneDomain ? ".payerone.com" : undefined;
+
+  cookieStore.delete({
+    name: AUTH_CONFIG.storageTokenKeyName,
+    path: "/",
+    domain: cookieDomain,
+  });
 
   // Clear any chunked tokens
   const chunkCount = cookieStore.get(AUTH_CONFIG.chunkCountKeyName)?.value;
   if (chunkCount) {
     const count = parseInt(chunkCount, 10);
     for (let i = 0; i < count; i++) {
-      cookieStore.delete(`${AUTH_CONFIG.chunkPrefix}${i}`);
+      cookieStore.delete({
+        name: `${AUTH_CONFIG.chunkPrefix}${i}`,
+        path: "/",
+        domain: cookieDomain,
+      });
     }
-    cookieStore.delete(AUTH_CONFIG.chunkCountKeyName);
+    cookieStore.delete({
+      name: AUTH_CONFIG.chunkCountKeyName,
+      path: "/",
+      domain: cookieDomain,
+    });
   }
+
+  cookieStore.delete({
+    name: AUTH_CONFIG.apiBaseUrlCookieKey,
+    path: "/",
+    domain: cookieDomain,
+  });
 
   redirect("/login");
 }
@@ -91,11 +114,21 @@ export async function checkTelegramConnection() {
 
 export async function setApiBaseUrl(url: string | null) {
   const cookieStore = await cookies();
+  const headerStore = await headers();
+  const host = headerStore.get("host") || "";
+  const isPayerOneDomain = host.endsWith(".payerone.com") || host === "payerone.com";
+  const cookieDomain = isPayerOneDomain ? ".payerone.com" : undefined;
+
   if (!url) {
-    cookieStore.delete(AUTH_CONFIG.apiBaseUrlCookieKey);
+    cookieStore.delete({
+      name: AUTH_CONFIG.apiBaseUrlCookieKey,
+      path: "/",
+      domain: cookieDomain,
+    });
   } else {
     cookieStore.set(AUTH_CONFIG.apiBaseUrlCookieKey, url, {
       path: "/",
+      domain: cookieDomain,
       maxAge: 30 * 24 * 60 * 60, // 30 days
     });
   }

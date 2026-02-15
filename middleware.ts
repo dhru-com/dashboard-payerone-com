@@ -52,18 +52,33 @@ export function middleware(request: NextRequest) {
   if (pathname === "/login" && request.nextUrl.searchParams.get("error") === "unauthorized") {
     console.log(`[Middleware] Unauthorized error detected, clearing cookies and staying at /login`);
     const response = NextResponse.next();
+    const host = request.headers.get("host") || "";
+    const isPayerOneDomain = host.endsWith(".payerone.com") || host === "payerone.com";
+    const cookieDomain = isPayerOneDomain ? ".payerone.com" : undefined;
 
     // Clear main token
-    response.cookies.delete(AUTH_CONFIG.storageTokenKeyName);
+    response.cookies.delete({
+      name: AUTH_CONFIG.storageTokenKeyName,
+      path: "/",
+      domain: cookieDomain,
+    });
 
     // Clear chunks if any
     const chunkCount = request.cookies.get(AUTH_CONFIG.chunkCountKeyName)?.value;
     if (chunkCount) {
       const count = parseInt(chunkCount, 10);
       for (let i = 0; i < count; i++) {
-        response.cookies.delete(`${AUTH_CONFIG.chunkPrefix}${i}`);
+        response.cookies.delete({
+          name: `${AUTH_CONFIG.chunkPrefix}${i}`,
+          path: "/",
+          domain: cookieDomain,
+        });
       }
-      response.cookies.delete(AUTH_CONFIG.chunkCountKeyName);
+      response.cookies.delete({
+        name: AUTH_CONFIG.chunkCountKeyName,
+        path: "/",
+        domain: cookieDomain,
+      });
     }
 
     return response;
