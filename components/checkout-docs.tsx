@@ -43,6 +43,7 @@ import {
   ShoppingCart,
   WebhookIcon,
   SearchIcon,
+  Download,
   Settings2,
   History,
   Eye,
@@ -622,6 +623,10 @@ export function CheckoutDocs({ apiToken }: { apiToken?: string }) {
               <Terminal className="h-4 w-4" />
               API Simulator
             </TabsTrigger>
+            <TabsTrigger value="plugins" className="gap-2">
+              <Download className="h-4 w-4" />
+              Download Plugins
+            </TabsTrigger>
             <TabsTrigger value="webhooks-docs" className="gap-2" asChild>
               <Link href="/developer/webhooks/docs">
                 <WebhookIcon className="h-4 w-4" />
@@ -1039,8 +1044,79 @@ export function CheckoutDocs({ apiToken }: { apiToken?: string }) {
             </div>
           </div>
         </div>
+      ) : activeTab === "plugins" ? (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Download className="h-5 w-5 text-primary" />
+                Download Plugins
+              </CardTitle>
+              <CardDescription>
+                Download ready-to-use plugins for your favorite e-commerce platforms. All plugins include full source code and integration logic.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {[
+                  { name: "WooCommerce", icon: "https://woocommerce.com/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/woocommerce-payerone.zip" },
+                  { name: "WHMCS", icon: "https://www.whmcs.com/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/whmcs-payerone.zip" },
+                  { name: "OpenCart", icon: "https://www.opencart.com/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/opencart-payerone.zip" },
+                  { name: "PrestaShop", icon: "https://www.prestashop.com/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/prestashop-payerone.zip" },
+                  { name: "Magento", icon: "https://magento.com/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/magento-payerone.zip" },
+                  { name: "Shopware", icon: "https://www.shopware.com/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/shopware-payerone.zip" },
+                  { name: "Zen Cart", icon: "https://www.zen-cart.com/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/zencart-payerone.zip" },
+                  { name: "osCommerce", icon: "https://www.oscommerce.com/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/oscommerce-payerone.zip" },
+                  { name: "Drupal", icon: "https://www.drupal.org/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/drupal-payerone.zip" },
+                  { name: "Odoo", icon: "https://www.odoo.com/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/odoo-payerone.zip" },
+                  { name: "CS-Cart", icon: "https://www.cs-cart.com/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/cscart-payerone.zip" },
+                  { name: "VirtueMart", icon: "https://virtuemart.net/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/virtuemart-payerone.zip" },
+                  { name: "X-Cart", icon: "https://www.x-cart.com/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/xcart-payerone.zip" },
+                  { name: "CubeCart", icon: "https://www.cubecart.com/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/cubecart-payerone.zip" },
+                  { name: "LiteCart", icon: "https://www.litecart.net/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/litecart-payerone.zip" },
+                  { name: "nopCommerce", icon: "https://www.nopcommerce.com/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/nopcommerce-payerone.zip" },
+                  { name: "AbanteCart", icon: "https://www.abantecart.com/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/abantecart-payerone.zip" },
+                  { name: "Blesta", icon: "https://www.blesta.com/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/blesta-payerone.zip" },
+                  { name: "BoxBilling", icon: "https://www.boxbilling.org/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/boxbilling-payerone.zip" },
+                  { name: "WP eCommerce", icon: "https://wpecommerce.org/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/wpecommerce-payerone.zip" },
+                  { name: "ClientExec", icon: "https://www.clientexec.com/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/clientexec-payerone.zip" },
+                  { name: "Sylius", icon: "https://sylius.com/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/sylius-payerone.zip" },
+                  { name: "HostBill", icon: "https://hostbillapp.com/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/hostbill-payerone.zip" },
+                  { name: "WiseCP", icon: "https://www.wisecp.com/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/wisecp-payerone.zip" },
+                  { name: "Easy Digital Downloads", icon: "https://easydigitaldownloads.com/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/edd-payerone.zip" },
+                  { name: "Aimeos", icon: "https://aimeos.org/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/aimeos-payerone.zip" },
+                  { name: "Spree Commerce", icon: "https://spreecommerce.org/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/spree-payerone.zip" },
+                  { name: "BigCommerce", icon: "https://www.bigcommerce.com/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/bigcommerce-payerone.zip" },
+                  { name: "Moodle", icon: "https://moodle.org/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/moodle-payerone.zip" },
+                  { name: "HikaShop", icon: "https://www.hikashop.com/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/hikashop-payerone.zip" },
+                  { name: "XenForo", icon: "https://xenforo.com/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/xenforo-payerone.zip" },
+                  { name: "Craft Commerce", icon: "https://craftcms.com/favicon.ico", link: "https://downloads.dhru.com/payerone_plugins/craftcommerce-payerone.zip" },
+                ].map((plugin) => (
+                  <Card key={plugin.name} className="overflow-hidden hover:border-primary/50 transition-colors shadow-sm">
+                    <CardContent className="p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={plugin.icon}
+                          alt={plugin.name}
+                          className="w-8 h-8 object-contain"
+                          onError={(e) => { e.currentTarget.src = "https://www.google.com/s2/favicons?domain=" + plugin.name.toLowerCase() + ".com&sz=64" }}
+                        />
+                        <span className="font-semibold text-sm">{plugin.name}</span>
+                      </div>
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={plugin.link} download className="flex items-center gap-2">
+                          <Download className="h-4 w-4" />
+                          Download
+                        </a>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       ) : (
-        /* API Simulator Tab */
         <div className="flex flex-col gap-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-7 space-y-6">
