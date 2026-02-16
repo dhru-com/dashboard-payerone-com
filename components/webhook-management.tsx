@@ -1,13 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { 
-  File, 
-  Plus, 
-  MoreHorizontal, 
-  Play, 
-  Trash2, 
-  Edit2, 
+import {
+  File,
+  Plus,
+  MoreHorizontal,
+  Play,
+  Trash2,
+  Edit2,
   Globe,
   Loader2,
   BookOpen
@@ -15,52 +15,52 @@ import {
 import { toast } from "sonner"
 import Link from "next/link"
 
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
 } from "@/components/ui/card"
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table"
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { 
-  Empty, 
-  EmptyContent, 
-  EmptyDescription, 
-  EmptyHeader, 
-  EmptyMedia, 
-  EmptyTitle 
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle
 } from "@/components/ui/empty"
-import { 
-  createWebhook, 
-  deleteWebhook, 
-  updateWebhook, 
-  testWebhook 
+import {
+  createWebhook,
+  deleteWebhook,
+  updateWebhook,
+  testWebhook
 } from "@/lib/webhook-actions"
 import { Webhook } from "@/types/webhook"
 
@@ -171,7 +171,7 @@ export function WebhookManagement({ initialWebhooks }: WebhookManagementProps) {
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" asChild>
-              <Link href="/developer/webhooks/docs">
+              <Link href="/developer/docs/webhooks">
                 <BookOpen className="mr-2 h-4 w-4" />
                 Documentation
               </Link>
@@ -202,7 +202,7 @@ export function WebhookManagement({ initialWebhooks }: WebhookManagementProps) {
                   Add Webhook
                 </Button>
                 <Button variant="ghost" className="text-muted-foreground" asChild>
-                  <Link href="/developer/webhooks/docs">
+                  <Link href="/developer/docs/webhooks">
                     <BookOpen className="mr-2 h-4 w-4" />
                     Read Documentation
                   </Link>
@@ -279,9 +279,9 @@ export function WebhookManagement({ initialWebhooks }: WebhookManagementProps) {
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="url">Webhook URL</Label>
-              <Input 
-                id="url" 
-                placeholder="https://your-api.com/webhooks" 
+              <Input
+                id="url"
+                placeholder="https://your-api.com/webhooks"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
               />
@@ -309,9 +309,9 @@ export function WebhookManagement({ initialWebhooks }: WebhookManagementProps) {
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="edit-url">Webhook URL</Label>
-              <Input 
-                id="edit-url" 
-                placeholder="https://your-api.com/webhooks" 
+              <Input
+                id="edit-url"
+                placeholder="https://your-api.com/webhooks"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
               />

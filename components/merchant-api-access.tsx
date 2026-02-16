@@ -75,7 +75,7 @@ export function MerchantApiAccess() {
           </CardDescription>
         </div>
         <Button variant="outline" asChild>
-          <Link href="/developer/docs">
+          <Link href="/developer/docs/api">
             <BookOpen className="mr-2 h-4 w-4" />
             Documentation
           </Link>

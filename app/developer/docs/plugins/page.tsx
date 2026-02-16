@@ -1,19 +1,14 @@
 import * as React from "react"
-import { WebhookManagement } from "@/components/webhook-management"
+import { PluginDownloads } from "@/components/developer-docs/plugin-downloads"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { getWebhooks } from "@/lib/webhook-actions"
 import { DocsBreadcrumbs } from "@/components/developer-docs/docs-breadcrumbs"
 
-export const dynamic = "force-dynamic";
-
-export default async function WebhooksPage() {
-  const initialWebhooks = await getWebhooks()
-
+export default function PluginsPage() {
   return (
-    <DashboardLayout title="Webhooks">
+    <DashboardLayout title="Documentation">
       <div className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 max-w-7xl mx-auto w-full">
         <DocsBreadcrumbs />
-        <WebhookManagement initialWebhooks={initialWebhooks} />
+        <PluginDownloads />
       </div>
     </DashboardLayout>
   )

@@ -107,6 +107,11 @@ const data = {
   ],
   developer: [
     {
+      title: "Overview",
+      url: "/developer",
+      icon: LayoutDashboardIcon,
+    },
+    {
       title: "API Keys",
       url: "/developer/api-keys",
       icon: KeyIcon,
@@ -120,6 +125,24 @@ const data = {
       title: "Documentation",
       url: "/developer/docs",
       icon: BookOpenIcon,
+      items: [
+        {
+          title: "API Reference",
+          url: "/developer/docs/api",
+        },
+        {
+          title: "API Simulator",
+          url: "/developer/docs/simulator",
+        },
+        {
+          title: "Download Plugins",
+          url: "/developer/docs/plugins",
+        },
+        {
+          title: "Webhooks Docs",
+          url: "/developer/docs/webhooks",
+        },
+      ],
     },
   ],
 }
@@ -150,8 +173,8 @@ export function AppSidebar({ user, ...props }: React.ComponentProps<typeof Sideb
       if (item.name === "PayerOne.me Link") {
         return {
           ...item,
-          url: sidebarUser.payment_handle 
-            ? "/payments/payerone-me-link" 
+          url: sidebarUser.payment_handle
+            ? "/payments/payerone-me-link"
             : "/payments/payerone-me-link/introduction"
         }
       }
