@@ -213,6 +213,9 @@ export function GatewayDialogV2({ open, onOpenChange, metadata, initialData }: G
     const file = e.target.files?.[0]
     if (!file) return
 
+    // Clear the input value to allow the same file to be uploaded again
+    e.target.value = ""
+
     const reader = new FileReader()
     reader.onload = async (event) => {
       const imageData = event.target?.result as string
@@ -226,13 +229,45 @@ export function GatewayDialogV2({ open, onOpenChange, metadata, initialData }: G
         canvas.width = image.width
         canvas.height = image.height
         context.drawImage(image, 0, 0)
-        const imgData = context.getImageData(0, 0, canvas.width, canvas.height)
-        const code = jsQR(imgData.data, imgData.width, imgData.height)
 
-        if (code) {
+        let currentImgData = context.getImageData(0, 0, canvas.width, canvas.height)
+        let bestCode: any = null
+        let maxArea = 0
+
+        // Find all QR codes (limited to 10 for safety)
+        for (let i = 0; i < 10; i++) {
+          const code = jsQR(currentImgData.data, currentImgData.width, currentImgData.height)
+          if (!code) break
+
+          // Calculate area (shoelace formula)
+          const { topLeftCorner, topRightCorner, bottomRightCorner, bottomLeftCorner } = code.location
+          const area = Math.abs(
+            (topLeftCorner.x * topRightCorner.y + topRightCorner.x * bottomRightCorner.y + bottomRightCorner.x * bottomLeftCorner.y + bottomLeftCorner.x * topLeftCorner.y) -
+            (topLeftCorner.y * topRightCorner.x + topRightCorner.y * bottomRightCorner.x + bottomRightCorner.y * bottomLeftCorner.x + bottomLeftCorner.y * topLeftCorner.x)
+          ) / 2
+
+          if (area > maxArea) {
+            maxArea = area
+            bestCode = code
+          }
+
+          // Mask the detected QR code with white to find others
+          context.fillStyle = "white"
+          context.beginPath()
+          context.moveTo(topLeftCorner.x, topLeftCorner.y)
+          context.lineTo(topRightCorner.x, topRightCorner.y)
+          context.lineTo(bottomRightCorner.x, bottomRightCorner.y)
+          context.lineTo(bottomLeftCorner.x, bottomLeftCorner.y)
+          context.closePath()
+          context.fill()
+
+          currentImgData = context.getImageData(0, 0, canvas.width, canvas.height)
+        }
+
+        if (bestCode) {
           // Use type assertion to bypass strict path checking for dynamic config keys
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          form.setValue(fieldName, code.data as string as any, { shouldValidate: true })
+          form.setValue(fieldName, bestCode.data as string as any, { shouldValidate: true })
           toast.success("QR Code decoded successfully")
         } else {
           toast.error("Could not find a valid QR code in the image")
@@ -432,40 +467,6 @@ export function GatewayDialogV2({ open, onOpenChange, metadata, initialData }: G
                     ))}
                   </SelectContent>
                 </Select>
-                {field.description && (
-                  <FormDescription className="text-[11px]">
-                    <span dangerouslySetInnerHTML={{ __html: decodeBase64(field.description) }} />
-                  </FormDescription>
-                )}
-                <FormMessage className="text-[11px]" />
-              </FormItem>
-            )}
-          />
-        )
-      case "qr_reader":
-        return (
-          <FormField
-            key={key}
-            control={form.control}
-            name={fieldName}
-            render={({ field: formField }) => (
-              <FormItem>
-                <FormLabel className="text-xs font-medium text-muted-foreground/80">
-                  {field.name}{field.required && <span className="text-destructive ml-1">*</span>}
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]
-                      if (file) {
-                        toast.info(`QR Reader: File "${file.name}" selected`)
-                        formField.onChange(file.name)
-                      }
-                    }}
-                  />
-                </FormControl>
                 {field.description && (
                   <FormDescription className="text-[11px]">
                     <span dangerouslySetInnerHTML={{ __html: decodeBase64(field.description) }} />
@@ -701,10 +702,10 @@ export function GatewayDialogV2({ open, onOpenChange, metadata, initialData }: G
                                     <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-muted-foreground group-focus-within:text-primary transition-colors">
                                       <CircleDollarSign className="h-3.5 w-3.5" />
                                     </div>
-                                    <Input 
-                                      type="number" 
-                                      className="pl-8" 
-                                      {...field} 
+                                    <Input
+                                      type="number"
+                                      className="pl-8"
+                                      {...field}
                                       onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                                     />
                                   </div>
@@ -724,10 +725,10 @@ export function GatewayDialogV2({ open, onOpenChange, metadata, initialData }: G
                                     <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-muted-foreground group-focus-within:text-primary transition-colors">
                                       <CircleDollarSign className="h-3.5 w-3.5" />
                                     </div>
-                                    <Input 
-                                      type="number" 
-                                      className="pl-8" 
-                                      {...field} 
+                                    <Input
+                                      type="number"
+                                      className="pl-8"
+                                      {...field}
                                       onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                                     />
                                   </div>
@@ -743,9 +744,9 @@ export function GatewayDialogV2({ open, onOpenChange, metadata, initialData }: G
                               <FormItem className="col-span-2">
                                 <FormLabel>Daily Order Limit</FormLabel>
                                 <FormControl>
-                                  <Input 
-                                    type="number" 
-                                    {...field} 
+                                  <Input
+                                    type="number"
+                                    {...field}
                                     onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                                   />
                                 </FormControl>
