@@ -701,7 +701,12 @@ export function GatewayDialogV2({ open, onOpenChange, metadata, initialData }: G
                                     <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-muted-foreground group-focus-within:text-primary transition-colors">
                                       <CircleDollarSign className="h-3.5 w-3.5" />
                                     </div>
-                                    <Input type="number" className="pl-8" {...field} />
+                                    <Input 
+                                      type="number" 
+                                      className="pl-8" 
+                                      {...field} 
+                                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                    />
                                   </div>
                                 </FormControl>
                                 <FormMessage />
@@ -719,7 +724,12 @@ export function GatewayDialogV2({ open, onOpenChange, metadata, initialData }: G
                                     <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-muted-foreground group-focus-within:text-primary transition-colors">
                                       <CircleDollarSign className="h-3.5 w-3.5" />
                                     </div>
-                                    <Input type="number" className="pl-8" {...field} />
+                                    <Input 
+                                      type="number" 
+                                      className="pl-8" 
+                                      {...field} 
+                                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                    />
                                   </div>
                                 </FormControl>
                                 <FormMessage />
@@ -733,7 +743,11 @@ export function GatewayDialogV2({ open, onOpenChange, metadata, initialData }: G
                               <FormItem className="col-span-2">
                                 <FormLabel>Daily Order Limit</FormLabel>
                                 <FormControl>
-                                  <Input type="number" {...field} />
+                                  <Input 
+                                    type="number" 
+                                    {...field} 
+                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                  />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
