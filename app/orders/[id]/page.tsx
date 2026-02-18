@@ -270,6 +270,22 @@ export default async function OrderDetailsPage(props: { params: Promise<{ id: st
                         {order.dt}
                       </p>
                     </div>
+                    {order.payment_amount && parseFloat(order.payment_amount) > 0 && (
+                      <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">Payment Amount</p>
+                        <p className="text-lg font-medium">
+                          {order.payment_amount}
+                        </p>
+                      </div>
+                    )}
+                    {order.received_amount && parseFloat(order.received_amount) > 0 && (
+                      <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">Received Amount</p>
+                        <p className="text-lg font-medium">
+                          {order.received_amount}
+                        </p>
+                      </div>
+                    )}
                     {order.network && (
                       <div className="space-y-1">
                         <p className="text-sm text-muted-foreground">{networkLabel}</p>
