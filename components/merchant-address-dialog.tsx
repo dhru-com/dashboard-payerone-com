@@ -242,19 +242,29 @@ export function MerchantAddressDialog({ open, onOpenChange, initialData, existin
                               />
                             </div>
                             {types.map((type) => {
-                              const isAlreadyAdded = existingTypes.includes(type)
+                              const typeCount = existingTypes.filter(t => t === type).length
+                              const isTron = type === 'tron'
+                              const limit = isTron ? 10 : 1
+                              const isAlreadyAdded = !isTron && typeCount >= limit
+                              const isLimitReached = isTron && typeCount >= limit
+
                               return (
                                 <SelectItem
                                   key={type}
                                   value={type}
                                   className="capitalize"
-                                  disabled={!isEdit && isAlreadyAdded}
+                                  disabled={!isEdit && (isAlreadyAdded || isLimitReached)}
                                 >
                                   <span className="flex items-center gap-2">
                                     {type.toUpperCase()}
-                                    {!isEdit && isAlreadyAdded && (
+                                    {!isEdit && (isAlreadyAdded || isLimitReached) && (
                                       <span className="text-[10px] text-muted-foreground font-normal">
-                                        (Already Added)
+                                        (Limit Reached)
+                                      </span>
+                                    )}
+                                    {!isEdit && isTron && typeCount > 0 && !isLimitReached && (
+                                      <span className="text-[10px] text-muted-foreground font-normal">
+                                        ({typeCount}/{limit})
                                       </span>
                                     )}
                                   </span>

@@ -41,7 +41,13 @@ export function MerchantAddresses({
   const [editingAddress, setEditingAddress] = React.useState<MerchantAddress | null>(null)
   const addresses = initialData
   const availableTypes = Array.from(new Set(Object.values(networkMetadata).map(n => n.type)))
-  const allTypesAdded = addresses.length >= availableTypes.length && availableTypes.length > 0
+  
+  const tronAddressesCount = addresses.filter(a => a.type === 'tron').length
+  const otherTypesAdded = availableTypes
+    .filter(t => t !== 'tron')
+    .every(t => addresses.some(a => a.type === t))
+  
+  const allTypesAdded = otherTypesAdded && tronAddressesCount >= 10
 
   const handleAdd = () => {
     setEditingAddress(null)
