@@ -8,3 +8,10 @@ export interface MerchantAddress {
   created_at: string
   updated_at: string
 }
+
+export interface VirtualAddress {
+  receive_address: string
+  type: string
+  status: number
+  last_accessed_date: string
+}
