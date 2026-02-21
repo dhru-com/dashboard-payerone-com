@@ -56,12 +56,15 @@ import { MerchantAddress } from "@/types/merchant"
 const formSchema = z.object({
   type: z.string().min(1, "Please select a type"),
   address: z.string().min(1, "Address is required"),
-  networks: z.record(z.string(), z.array(z.string())).refine((val) => {
-    return Object.values(val).some(tokens => tokens.length > 0)
-  }, "Please select at least one network and token"),
+  networks: z.record(z.string(), z.array(z.string())),
   notes: z.string().optional(),
-  under_payment: z.coerce.number().min(0).optional(),
+  under_payment: z.number().min(0).optional(),
   is_active: z.boolean(),
+}).refine((data) => {
+  return Object.values(data.networks).some(tokens => tokens.length > 0)
+}, {
+  message: "Please select at least one network and token",
+  path: ["networks"]
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -365,6 +368,7 @@ export function MerchantAddressDialog({ open, onOpenChange, initialData, existin
                             placeholder="0.01" 
                             {...field} 
                             value={field.value ?? ""} 
+                            onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
                           />
                         </FormControl>
                         <FormDescription>
