@@ -23,6 +23,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
+  FormDescription,
   FormMessage,
 } from "@/components/ui/form"
 import {
@@ -59,6 +60,7 @@ const formSchema = z.object({
     return Object.values(val).some(tokens => tokens.length > 0)
   }, "Please select at least one network and token"),
   notes: z.string().optional(),
+  under_payment: z.coerce.number().min(0).optional(),
   is_active: z.boolean(),
 })
 
@@ -84,6 +86,7 @@ export function MerchantAddressDialog({ open, onOpenChange, initialData, existin
       address: "",
       networks: {},
       notes: "",
+      under_payment: 0.01,
       is_active: true,
     },
   })
@@ -96,6 +99,7 @@ export function MerchantAddressDialog({ open, onOpenChange, initialData, existin
         address: initialData.address,
         networks: initialData.networks,
         notes: initialData.notes || "",
+        under_payment: initialData.under_payment ?? 0.01,
         is_active: initialData.is_active,
       })
     } else {
@@ -104,6 +108,7 @@ export function MerchantAddressDialog({ open, onOpenChange, initialData, existin
         address: "",
         networks: {},
         notes: "",
+        under_payment: 0.01,
         is_active: true,
       })
     }
@@ -146,9 +151,14 @@ export function MerchantAddressDialog({ open, onOpenChange, initialData, existin
     try {
       // Map is_active boolean to 1/0 as per API example if needed
       // But let's try boolean first as it's cleaner. The issue says "is_active": 1.
-      const payload = {
+      const payload: any = {
         ...values,
         is_active: values.is_active ? 1 : 0
+      }
+
+      // Only include under_payment for EVM and Solana type
+      if (values.type !== 'evm' && values.type !== 'solana') {
+        delete payload.under_payment
       }
 
       const result = isEdit
@@ -339,6 +349,32 @@ export function MerchantAddressDialog({ open, onOpenChange, initialData, existin
                     </FormItem>
                   )}
                 />
+
+                {(selectedType === 'evm' || selectedType === 'solana') && (
+                  <FormField
+                    control={form.control}
+                    name="under_payment"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Underpayment Tolerance</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            step="0.01" 
+                            min="0" 
+                            placeholder="0.01" 
+                            {...field} 
+                            value={field.value ?? ""} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Allow orders to be marked as paid even if the customer pays slightly less than the total (e.g. 0.01 to cover Binance exchange fees).
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 {selectedType && (
                   <div className="space-y-4">

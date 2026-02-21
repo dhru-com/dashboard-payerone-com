@@ -4,6 +4,7 @@ export interface MerchantAddress {
   address: string
   networks: Record<string, string[]>
   notes?: string
+  under_payment?: number
   is_active: boolean
   created_at: string
   updated_at: string

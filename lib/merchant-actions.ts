@@ -10,6 +10,7 @@ export interface MerchantAddressPayload {
   address: string;
   networks: Record<string, string[]>;
   notes?: string;
+  under_payment?: number;
   is_active?: number | boolean;
 }
 
