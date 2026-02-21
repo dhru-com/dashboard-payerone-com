@@ -60,12 +60,12 @@ export function MerchantAddresses({
     params.set("tab", value)
     router.push(`${pathname}?${params.toString()}`, { scroll: false })
   }
-  
+
   const tronAddressesCount = addresses.filter(a => a.type === 'tron').length
   const otherTypesAdded = availableTypes
     .filter(t => t !== 'tron')
     .every(t => addresses.some(a => a.type === t))
-  
+
   const allTypesAdded = otherTypesAdded && tronAddressesCount >= 10
 
   const handleAdd = () => {
@@ -97,6 +97,8 @@ export function MerchantAddresses({
         return <SafeImage src="/logos/solana.svg" alt="Solana" width={16} height={16} className="h-4 w-4" />
       case 'tron':
         return <SafeImage src="/logos/tron_mono.svg" alt="Tron" width={16} height={16} className="h-4 w-4" />
+      case 'btc':
+        return <SafeImage src="/logos/btc.svg" alt="BTC" width={16} height={16} className="h-4 w-4" />
       default:
         return <Wallet className="h-4 w-4 text-muted-foreground" />
     }
@@ -237,9 +239,9 @@ export function MerchantAddresses({
                 </div>
               </CardHeader>
               <CardContent>
-                <VirtualAddressesDataTable 
-                  data={virtualAddresses} 
-                  pageCount={virtualPageCount} 
+                <VirtualAddressesDataTable
+                  data={virtualAddresses}
+                  pageCount={virtualPageCount}
                   networkMetadata={networkMetadata}
                 />
               </CardContent>

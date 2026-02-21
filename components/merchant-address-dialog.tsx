@@ -4,9 +4,10 @@ import * as React from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Loader2, Trash2 } from "lucide-react"
+import { Loader2, Trash2, Wallet } from "lucide-react"
 import Image from "next/image"
 import { toast } from "sonner"
+import { SafeImage } from "@/components/safe-image"
 
 import {
   Dialog,
@@ -124,6 +125,21 @@ export function MerchantAddressDialog({ open, onOpenChange, initialData, existin
   const networksForType = Object.entries(NETWORK_METADATA).filter(
     ([_, meta]) => meta.type === selectedType
   )
+
+  const getTypeIconPath = (type: string) => {
+    switch (type.toLowerCase()) {
+      case 'evm':
+        return "/logos/ethereum.svg"
+      case 'solana':
+        return "/logos/solana.svg"
+      case 'tron':
+        return "/logos/tron_mono.svg"
+      case 'btc':
+        return "/logos/btc.svg"
+      default:
+        return null
+    }
+  }
 
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true)
@@ -256,6 +272,15 @@ export function MerchantAddressDialog({ open, onOpenChange, initialData, existin
                                   disabled={!isEdit && (isAlreadyAdded || isLimitReached)}
                                 >
                                   <span className="flex items-center gap-2">
+                                    <div className="relative h-4 w-4 shrink-0 overflow-hidden rounded-full">
+                                      <SafeImage
+                                        src={getTypeIconPath(type) || "/logos/wallet.svg"}
+                                        alt={type}
+                                        fill
+                                        className="object-contain"
+                                        fallbackIcon={<Wallet className="h-3 w-3 text-muted-foreground" />}
+                                      />
+                                    </div>
                                     {type.toUpperCase()}
                                     {!isEdit && (isAlreadyAdded || isLimitReached) && (
                                       <span className="text-[10px] text-muted-foreground font-normal">
